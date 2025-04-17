@@ -1,0 +1,53 @@
+import { api } from ".";
+import type { CompletePayload } from "./types";
+
+export interface Profile {
+    id: string;
+    city: string;
+    first_name: string;
+    last_name: string;
+    is_social_account?: boolean;
+    is_required_field_fill?: boolean;
+    avatar?: string;
+    email: string;
+    phone_number?: string;
+    created?: string;
+    modified?: string;
+}
+
+// /client:
+// get:
+//   operationId: client_list
+export async function getClientList(): Promise<Profile[]> {
+    const res = await api.get("/api/v1/client");
+
+    return res.data;
+}
+
+// /client/me:
+// get:
+//   operationId: client_me
+export async function getClient(): Promise<Profile> {
+    const res = await api.get("/api/v1/client/me");
+
+    return res.data;
+}
+
+// patch:
+//   operationId: client_partial_update
+export async function patchClient(payload: Profile | CompletePayload, id: string): Promise<Profile> {
+    const res = await api.patch(`/api/v1/client/${id}`, {
+        ...payload
+    });
+
+    return res.data;
+}
+
+// /client/{id}:
+// get:
+//   operationId: client_read
+export async function getClientById(id: string): Promise<Profile> {
+    const res = await api.get(`/api/v1/client/${id}`);
+
+    return res.data;
+}

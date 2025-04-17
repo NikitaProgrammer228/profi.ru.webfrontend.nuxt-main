@@ -1,0 +1,89 @@
+@font-face {
+    font-weight: 400;
+    /* Соответствует значению normal */
+    font-family: 'Mabry Pro';
+    src: url('../fonts/MabryPro-Regular.ttf');
+}
+
+@font-face {
+    font-weight: 700;
+    /* Соответствует значению bold */
+    font-family: 'Mabry Pro';
+    src: url('../fonts/MabryPro-Bold.ttf');
+}
+
+@font-face {
+    font-weight: 500;
+    /* Соответствует значению bold */
+    font-family: 'Mabry Pro';
+    src: url('../fonts/MabryPro-Medium.ttf');
+}
+
+*:not(.wrapper) {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: 'Mabry Pro', sans-serif;
+    height: 100dvh;
+}
+
+input[type=text],
+input[type=number] {
+    font-family: 'Mabry Pro', sans-serif;
+}
+
+a,
+p,
+span,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    text-decoration: none;
+    color: rgba(28, 28, 28, 1);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: #1C1C1C;
+}
+
+@media screen and (max-width: 650px) {
+    h2 {
+        font-size: 22px !important;
+    }
+
+    h3 {
+        font-size: 18px !important;
+    }
+}
+
+input::placeholder, textarea::placeholder {
+    font-family: 'Mabry Pro', sans-serif;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+    -webkit-appearance: textfield;
+    appearance: textfield;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+html {
+    overflow-x: hidden;
+ }

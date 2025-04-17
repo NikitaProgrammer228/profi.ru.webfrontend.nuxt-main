@@ -1,0 +1,2906 @@
+swagger: '2.0'
+info:
+  title: Profi.RU API
+  version: v1
+host: 45.147.177.69
+schemes:
+- http
+basePath: /api/v1
+consumes:
+- application/json
+produces:
+- application/json
+securityDefinitions:
+  Basic:
+    type: basic
+security:
+- Basic: []
+paths:
+  /categories:
+    get:
+      operationId: categories_list
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+      tags:
+      - categories
+    parameters: []
+  /categories/{id}/subcategories:
+    get:
+      operationId: categories_subcategories
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+      tags:
+      - categories
+    parameters:
+    - name: id
+      in: path
+      required: true
+      type: string
+  /categories/{id}/subcategories/{subcategory_pk}/masters:
+    get:
+      operationId: categories_subcategories_masters
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+      tags:
+      - categories
+    parameters:
+    - name: id
+      in: path
+      required: true
+      type: string
+    - name: subcategory_pk
+      in: path
+      required: true
+      type: string
+  /city:
+    get:
+      operationId: city_list
+      description: ''
+      parameters:
+      - name: limit
+        in: query
+        description: Number of results to return per page.
+        required: false
+        type: integer
+      - name: offset
+        in: query
+        description: The initial index from which to return the results.
+        required: false
+        type: integer
+      responses:
+        '200':
+          description: ''
+          schema:
+            required:
+            - count
+            - results
+            type: object
+            properties:
+              count:
+                type: integer
+              next:
+                type: string
+                format: uri
+                x-nullable: true
+              previous:
+                type: string
+                format: uri
+                x-nullable: true
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/City'
+      tags:
+      - city
+    post:
+      operationId: city_create
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/City'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/City'
+      tags:
+      - city
+    parameters: []
+  /city/{id}:
+    get:
+      operationId: city_read
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/City'
+      tags:
+      - city
+    put:
+      operationId: city_update
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/City'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/City'
+      tags:
+      - city
+    patch:
+      operationId: city_partial_update
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/City'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/City'
+      tags:
+      - city
+    delete:
+      operationId: city_delete
+      description: ''
+      parameters: []
+      responses:
+        '204':
+          description: ''
+      tags:
+      - city
+    parameters:
+    - name: id
+      in: path
+      description: A unique integer value identifying this city.
+      required: true
+      type: integer
+  /client:
+    get:
+      operationId: client_list
+      description: ''
+      parameters:
+      - name: limit
+        in: query
+        description: Number of results to return per page.
+        required: false
+        type: integer
+      - name: offset
+        in: query
+        description: The initial index from which to return the results.
+        required: false
+        type: integer
+      responses:
+        '200':
+          description: ''
+          schema:
+            required:
+            - count
+            - results
+            type: object
+            properties:
+              count:
+                type: integer
+              next:
+                type: string
+                format: uri
+                x-nullable: true
+              previous:
+                type: string
+                format: uri
+                x-nullable: true
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/ClientProfileRead'
+      tags:
+      - client
+    post:
+      operationId: client_create
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/ClientProfile'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/ClientProfile'
+      tags:
+      - client
+    parameters: []
+  /client/fill_required_fields:
+    post:
+      operationId: client_fill_required_fields
+      description: ''
+      parameters: []
+      responses:
+        '201':
+          description: ''
+      tags:
+      - client
+    parameters: []
+  /client/me:
+    get:
+      operationId: client_me
+      description: ''
+      parameters:
+      - name: limit
+        in: query
+        description: Number of results to return per page.
+        required: false
+        type: integer
+      - name: offset
+        in: query
+        description: The initial index from which to return the results.
+        required: false
+        type: integer
+      responses:
+        '200':
+          description: ''
+      tags:
+      - client
+    parameters: []
+  /client/{id}:
+    get:
+      operationId: client_read
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/ClientProfileRead'
+      tags:
+      - client
+    put:
+      operationId: client_update
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/ClientProfile'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/ClientProfile'
+      tags:
+      - client
+    patch:
+      operationId: client_partial_update
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/ClientProfile'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/ClientProfile'
+      tags:
+      - client
+    delete:
+      operationId: client_delete
+      description: ''
+      parameters: []
+      responses:
+        '204':
+          description: ''
+      tags:
+      - client
+    parameters:
+    - name: id
+      in: path
+      description: A UUID string identifying this client profile.
+      required: true
+      type: string
+      format: uuid
+  /client/{id}/notification_settings:
+    get:
+      operationId: client_notification_settings_read
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+      tags:
+      - client
+    patch:
+      operationId: client_notification_settings_partial_update
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+      tags:
+      - client
+    parameters:
+    - name: id
+      in: path
+      description: A UUID string identifying this client profile.
+      required: true
+      type: string
+      format: uuid
+  /country:
+    get:
+      operationId: country_list
+      description: ''
+      parameters:
+      - name: limit
+        in: query
+        description: Number of results to return per page.
+        required: false
+        type: integer
+      - name: offset
+        in: query
+        description: The initial index from which to return the results.
+        required: false
+        type: integer
+      responses:
+        '200':
+          description: ''
+          schema:
+            required:
+            - count
+            - results
+            type: object
+            properties:
+              count:
+                type: integer
+              next:
+                type: string
+                format: uri
+                x-nullable: true
+              previous:
+                type: string
+                format: uri
+                x-nullable: true
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/Country'
+      tags:
+      - country
+    post:
+      operationId: country_create
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/Country'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/Country'
+      tags:
+      - country
+    parameters: []
+  /country/{id}:
+    get:
+      operationId: country_read
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Country'
+      tags:
+      - country
+    put:
+      operationId: country_update
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/Country'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Country'
+      tags:
+      - country
+    patch:
+      operationId: country_partial_update
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/Country'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Country'
+      tags:
+      - country
+    delete:
+      operationId: country_delete
+      description: ''
+      parameters: []
+      responses:
+        '204':
+          description: ''
+      tags:
+      - country
+    parameters:
+    - name: id
+      in: path
+      description: A unique integer value identifying this country.
+      required: true
+      type: integer
+  /image:
+    get:
+      operationId: image_list
+      description: ''
+      parameters:
+      - name: limit
+        in: query
+        description: Number of results to return per page.
+        required: false
+        type: integer
+      - name: offset
+        in: query
+        description: The initial index from which to return the results.
+        required: false
+        type: integer
+      responses:
+        '200':
+          description: ''
+          schema:
+            required:
+            - count
+            - results
+            type: object
+            properties:
+              count:
+                type: integer
+              next:
+                type: string
+                format: uri
+                x-nullable: true
+              previous:
+                type: string
+                format: uri
+                x-nullable: true
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/Image'
+      consumes:
+      - multipart/form-data
+      tags:
+      - image
+    post:
+      operationId: image_create
+      description: ''
+      parameters:
+      - name: image
+        in: formData
+        required: true
+        type: file
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/Image'
+      consumes:
+      - multipart/form-data
+      tags:
+      - image
+    parameters: []
+  /image/check_image_size:
+    post:
+      operationId: image_check_image_size
+      description: ''
+      parameters:
+      - name: image
+        in: formData
+        required: true
+        type: file
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/Image'
+      consumes:
+      - multipart/form-data
+      tags:
+      - image
+    parameters: []
+  /image/upload:
+    post:
+      operationId: image_upload_image
+      description: ''
+      parameters:
+      - name: image
+        in: formData
+        required: true
+        type: file
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/Image'
+      consumes:
+      - multipart/form-data
+      tags:
+      - image
+    parameters: []
+  /image/{id}:
+    get:
+      operationId: image_read
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Image'
+      consumes:
+      - multipart/form-data
+      tags:
+      - image
+    put:
+      operationId: image_update
+      description: ''
+      parameters:
+      - name: image
+        in: formData
+        required: true
+        type: file
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Image'
+      consumes:
+      - multipart/form-data
+      tags:
+      - image
+    patch:
+      operationId: image_partial_update
+      description: ''
+      parameters:
+      - name: image
+        in: formData
+        required: true
+        type: file
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Image'
+      consumes:
+      - multipart/form-data
+      tags:
+      - image
+    delete:
+      operationId: image_delete
+      description: ''
+      parameters: []
+      responses:
+        '204':
+          description: ''
+      consumes:
+      - multipart/form-data
+      tags:
+      - image
+    parameters:
+    - name: id
+      in: path
+      description: A UUID string identifying this image.
+      required: true
+      type: string
+      format: uuid
+  /location/find_address:
+    get:
+      operationId: location_find_address
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+      tags:
+      - location
+    parameters: []
+  /master:
+    get:
+      operationId: master_list
+      description: ''
+      parameters:
+      - name: limit
+        in: query
+        description: Number of results to return per page.
+        required: false
+        type: integer
+      - name: offset
+        in: query
+        description: The initial index from which to return the results.
+        required: false
+        type: integer
+      responses:
+        '200':
+          description: ''
+          schema:
+            required:
+            - count
+            - results
+            type: object
+            properties:
+              count:
+                type: integer
+              next:
+                type: string
+                format: uri
+                x-nullable: true
+              previous:
+                type: string
+                format: uri
+                x-nullable: true
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/MasterProfilePublic'
+      tags:
+      - master
+    post:
+      operationId: master_create
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/MasterProfilePrivate'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/MasterProfilePrivate'
+      tags:
+      - master
+    parameters: []
+  /master/add_address:
+    post:
+      operationId: master_add_address
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/MasterProfilePublic'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/MasterProfilePublic'
+      tags:
+      - master
+    parameters: []
+  /master/list_addresses:
+    get:
+      operationId: master_list_addresses
+      description: ''
+      parameters:
+      - name: limit
+        in: query
+        description: Number of results to return per page.
+        required: false
+        type: integer
+      - name: offset
+        in: query
+        description: The initial index from which to return the results.
+        required: false
+        type: integer
+      responses:
+        '200':
+          description: ''
+          schema:
+            required:
+            - count
+            - results
+            type: object
+            properties:
+              count:
+                type: integer
+              next:
+                type: string
+                format: uri
+                x-nullable: true
+              previous:
+                type: string
+                format: uri
+                x-nullable: true
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/MasterProfilePublic'
+      tags:
+      - master
+    parameters: []
+  /master/me:
+    get:
+      operationId: master_me
+      description: ''
+      parameters:
+      - name: limit
+        in: query
+        description: Number of results to return per page.
+        required: false
+        type: integer
+      - name: offset
+        in: query
+        description: The initial index from which to return the results.
+        required: false
+        type: integer
+      responses:
+        '200':
+          description: ''
+          schema:
+            required:
+            - count
+            - results
+            type: object
+            properties:
+              count:
+                type: integer
+              next:
+                type: string
+                format: uri
+                x-nullable: true
+              previous:
+                type: string
+                format: uri
+                x-nullable: true
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/MasterProfilePublic'
+      tags:
+      - master
+    parameters: []
+  /master/{id}:
+    get:
+      operationId: master_read
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/MasterProfilePublic'
+      tags:
+      - master
+    put:
+      operationId: master_update
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/MasterProfilePrivate'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/MasterProfilePrivate'
+      tags:
+      - master
+    patch:
+      operationId: master_partial_update
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/MasterProfilePrivate'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/MasterProfilePrivate'
+      tags:
+      - master
+    delete:
+      operationId: master_delete
+      description: ''
+      parameters: []
+      responses:
+        '204':
+          description: ''
+      tags:
+      - master
+    parameters:
+    - name: id
+      in: path
+      description: A UUID string identifying this master profile.
+      required: true
+      type: string
+      format: uuid
+  /master/{id}/delete_address:
+    delete:
+      operationId: master_delete_address
+      description: ''
+      parameters: []
+      responses:
+        '204':
+          description: ''
+      tags:
+      - master
+    parameters:
+    - name: id
+      in: path
+      description: A UUID string identifying this master profile.
+      required: true
+      type: string
+      format: uuid
+  /master/{id}/education:
+    get:
+      operationId: master_education_read
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/MasterProfilePublic'
+      tags:
+      - master
+    post:
+      operationId: master_education_create
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/MasterProfilePublic'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/MasterProfilePublic'
+      tags:
+      - master
+    put:
+      operationId: master_education_update
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/MasterProfilePublic'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/MasterProfilePublic'
+      tags:
+      - master
+    patch:
+      operationId: master_education_partial_update
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/MasterProfilePublic'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/MasterProfilePublic'
+      tags:
+      - master
+    delete:
+      operationId: master_education_delete
+      description: ''
+      parameters: []
+      responses:
+        '204':
+          description: ''
+      tags:
+      - master
+    parameters:
+    - name: id
+      in: path
+      description: A UUID string identifying this master profile.
+      required: true
+      type: string
+      format: uuid
+  /master/{id}/notification_settings:
+    get:
+      operationId: master_notification_settings_read
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/MasterProfilePublic'
+      tags:
+      - master
+    patch:
+      operationId: master_notification_settings_partial_update
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/MasterProfilePublic'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/MasterProfilePublic'
+      tags:
+      - master
+    parameters:
+    - name: id
+      in: path
+      description: A UUID string identifying this master profile.
+      required: true
+      type: string
+      format: uuid
+  /master/{id}/retrieve-address/{address_id}:
+    get:
+      operationId: master_retrieve_address
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/MasterProfilePublic'
+      tags:
+      - master
+    parameters:
+    - name: id
+      in: path
+      description: A UUID string identifying this master profile.
+      required: true
+      type: string
+      format: uuid
+    - name: address_id
+      in: path
+      required: true
+      type: string
+  /master/{id}/service_detail:
+    get:
+      operationId: master_service_detail_read
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/MasterProfilePublic'
+      tags:
+      - master
+    post:
+      operationId: master_service_detail_create
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/MasterProfilePublic'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/MasterProfilePublic'
+      tags:
+      - master
+    put:
+      operationId: master_service_detail_update
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/MasterProfilePublic'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/MasterProfilePublic'
+      tags:
+      - master
+    patch:
+      operationId: master_service_detail_partial_update
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/MasterProfilePublic'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/MasterProfilePublic'
+      tags:
+      - master
+    delete:
+      operationId: master_service_detail_delete
+      description: ''
+      parameters: []
+      responses:
+        '204':
+          description: ''
+      tags:
+      - master
+    parameters:
+    - name: id
+      in: path
+      description: A UUID string identifying this master profile.
+      required: true
+      type: string
+      format: uuid
+  /master/{id}/special_offer:
+    get:
+      operationId: master_special_offer_read
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/MasterProfilePublic'
+      tags:
+      - master
+    post:
+      operationId: master_special_offer_create
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/MasterProfilePublic'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/MasterProfilePublic'
+      tags:
+      - master
+    put:
+      operationId: master_special_offer_update
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/MasterProfilePublic'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/MasterProfilePublic'
+      tags:
+      - master
+    patch:
+      operationId: master_special_offer_partial_update
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/MasterProfilePublic'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/MasterProfilePublic'
+      tags:
+      - master
+    delete:
+      operationId: master_special_offer_delete
+      description: ''
+      parameters: []
+      responses:
+        '204':
+          description: ''
+      tags:
+      - master
+    parameters:
+    - name: id
+      in: path
+      description: A UUID string identifying this master profile.
+      required: true
+      type: string
+      format: uuid
+  /master/{id}/specializations:
+    get:
+      operationId: master_specializations_read
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/MasterProfilePublic'
+      tags:
+      - master
+    post:
+      operationId: master_specializations_create
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/MasterProfilePublic'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/MasterProfilePublic'
+      tags:
+      - master
+    put:
+      operationId: master_specializations_update
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/MasterProfilePublic'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/MasterProfilePublic'
+      tags:
+      - master
+    patch:
+      operationId: master_specializations_partial_update
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/MasterProfilePublic'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/MasterProfilePublic'
+      tags:
+      - master
+    delete:
+      operationId: master_specializations_delete
+      description: ''
+      parameters: []
+      responses:
+        '204':
+          description: ''
+      tags:
+      - master
+    parameters:
+    - name: id
+      in: path
+      description: A UUID string identifying this master profile.
+      required: true
+      type: string
+      format: uuid
+  /master/{id}/update_address:
+    put:
+      operationId: master_update_address_update
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/MasterProfilePublic'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/MasterProfilePublic'
+      tags:
+      - master
+    patch:
+      operationId: master_update_address_partial_update
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/MasterProfilePublic'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/MasterProfilePublic'
+      tags:
+      - master
+    parameters:
+    - name: id
+      in: path
+      description: A UUID string identifying this master profile.
+      required: true
+      type: string
+      format: uuid
+  /orders:
+    get:
+      operationId: orders_list
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+      tags:
+      - orders
+    post:
+      operationId: orders_create
+      description: ''
+      parameters: []
+      responses:
+        '201':
+          description: ''
+      tags:
+      - orders
+    parameters: []
+  /orders/my_archive_orders:
+    get:
+      operationId: orders_my_archive_orders
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+      tags:
+      - orders
+    parameters: []
+  /orders/my_orders:
+    get:
+      operationId: orders_my_orders
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+      tags:
+      - orders
+    parameters: []
+  /orders/{id}:
+    get:
+      operationId: orders_read
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+      tags:
+      - orders
+    put:
+      operationId: orders_update
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+      tags:
+      - orders
+    delete:
+      operationId: orders_delete
+      description: ''
+      parameters: []
+      responses:
+        '204':
+          description: ''
+      tags:
+      - orders
+    parameters:
+    - name: id
+      in: path
+      required: true
+      type: string
+  /orders/{id}/cancel:
+    post:
+      operationId: orders_cancel
+      description: ''
+      parameters: []
+      responses:
+        '201':
+          description: ''
+      tags:
+      - orders
+    parameters:
+    - name: id
+      in: path
+      required: true
+      type: string
+  /orders/{id}/choose_master:
+    patch:
+      operationId: orders_choose_master
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+      tags:
+      - orders
+    parameters:
+    - name: id
+      in: path
+      required: true
+      type: string
+  /orders/{id}/complete:
+    post:
+      operationId: orders_complete
+      description: ''
+      parameters: []
+      responses:
+        '201':
+          description: ''
+      tags:
+      - orders
+    parameters:
+    - name: id
+      in: path
+      required: true
+      type: string
+  /orders/{id}/delete_response:
+    delete:
+      operationId: orders_delete_response
+      description: ''
+      parameters: []
+      responses:
+        '204':
+          description: ''
+      tags:
+      - orders
+    parameters:
+    - name: id
+      in: path
+      required: true
+      type: string
+  /orders/{id}/edit_response:
+    patch:
+      operationId: orders_edit_response
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+      tags:
+      - orders
+    parameters:
+    - name: id
+      in: path
+      required: true
+      type: string
+  /orders/{id}/offer_to_master:
+    post:
+      operationId: orders_offer_to_master
+      description: ''
+      parameters: []
+      responses:
+        '201':
+          description: ''
+      tags:
+      - orders
+    parameters:
+    - name: id
+      in: path
+      required: true
+      type: string
+  /orders/{id}/order_responses:
+    get:
+      operationId: orders_order_responses
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+      tags:
+      - orders
+    parameters:
+    - name: id
+      in: path
+      required: true
+      type: string
+  /orders/{id}/recommended_masters:
+    get:
+      operationId: orders_recommended_masters
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+      tags:
+      - orders
+    parameters:
+    - name: id
+      in: path
+      required: true
+      type: string
+  /orders/{id}/reject_response:
+    delete:
+      operationId: orders_reject_response
+      description: ''
+      parameters: []
+      responses:
+        '204':
+          description: ''
+      tags:
+      - orders
+    parameters:
+    - name: id
+      in: path
+      required: true
+      type: string
+  /orders/{id}/remove_address:
+    delete:
+      operationId: orders_remove_address
+      description: ''
+      parameters: []
+      responses:
+        '204':
+          description: ''
+      tags:
+      - orders
+    parameters:
+    - name: id
+      in: path
+      required: true
+      type: string
+  /orders/{id}/respond_to_proposal:
+    patch:
+      operationId: orders_respond_to_proposal
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+      tags:
+      - orders
+    parameters:
+    - name: id
+      in: path
+      required: true
+      type: string
+  /orders/{id}/response_master:
+    post:
+      operationId: orders_response_master
+      description: ''
+      parameters: []
+      responses:
+        '201':
+          description: ''
+      tags:
+      - orders
+    parameters:
+    - name: id
+      in: path
+      required: true
+      type: string
+  /orders/{id}/set_address:
+    post:
+      operationId: orders_set_address
+      description: ''
+      parameters: []
+      responses:
+        '201':
+          description: ''
+      tags:
+      - orders
+    parameters:
+    - name: id
+      in: path
+      required: true
+      type: string
+  /orders/{id}/update_address:
+    put:
+      operationId: orders_update_address_update
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+      tags:
+      - orders
+    patch:
+      operationId: orders_update_address_partial_update
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+      tags:
+      - orders
+    parameters:
+    - name: id
+      in: path
+      required: true
+      type: string
+  /reason-cancel:
+    get:
+      operationId: reason-cancel_list
+      description: ''
+      parameters:
+      - name: limit
+        in: query
+        description: Number of results to return per page.
+        required: false
+        type: integer
+      - name: offset
+        in: query
+        description: The initial index from which to return the results.
+        required: false
+        type: integer
+      responses:
+        '200':
+          description: ''
+          schema:
+            required:
+            - count
+            - results
+            type: object
+            properties:
+              count:
+                type: integer
+              next:
+                type: string
+                format: uri
+                x-nullable: true
+              previous:
+                type: string
+                format: uri
+                x-nullable: true
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/ReasonCancel'
+      tags:
+      - reason-cancel
+    post:
+      operationId: reason-cancel_create
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/ReasonCancel'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/ReasonCancel'
+      tags:
+      - reason-cancel
+    parameters: []
+  /reason-cancel/{id}:
+    get:
+      operationId: reason-cancel_read
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/ReasonCancel'
+      tags:
+      - reason-cancel
+    put:
+      operationId: reason-cancel_update
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/ReasonCancel'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/ReasonCancel'
+      tags:
+      - reason-cancel
+    patch:
+      operationId: reason-cancel_partial_update
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/ReasonCancel'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/ReasonCancel'
+      tags:
+      - reason-cancel
+    delete:
+      operationId: reason-cancel_delete
+      description: ''
+      parameters: []
+      responses:
+        '204':
+          description: ''
+      tags:
+      - reason-cancel
+    parameters:
+    - name: id
+      in: path
+      description: A UUID string identifying this reason cancel.
+      required: true
+      type: string
+      format: uuid
+  /review:
+    get:
+      operationId: review_list
+      description: ''
+      parameters:
+      - name: limit
+        in: query
+        description: Number of results to return per page.
+        required: false
+        type: integer
+      - name: offset
+        in: query
+        description: The initial index from which to return the results.
+        required: false
+        type: integer
+      responses:
+        '200':
+          description: ''
+          schema:
+            required:
+            - count
+            - results
+            type: object
+            properties:
+              count:
+                type: integer
+              next:
+                type: string
+                format: uri
+                x-nullable: true
+              previous:
+                type: string
+                format: uri
+                x-nullable: true
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/Review'
+      tags:
+      - review
+    post:
+      operationId: review_create
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/Review'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/Review'
+      tags:
+      - review
+    parameters: []
+  /review/{id}:
+    get:
+      operationId: review_read
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Review'
+      tags:
+      - review
+    put:
+      operationId: review_update
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/Review'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Review'
+      tags:
+      - review
+    patch:
+      operationId: review_partial_update
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/Review'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Review'
+      tags:
+      - review
+    delete:
+      operationId: review_delete
+      description: ''
+      parameters: []
+      responses:
+        '204':
+          description: ''
+      tags:
+      - review
+    parameters:
+    - name: id
+      in: path
+      description: A UUID string identifying this review.
+      required: true
+      type: string
+      format: uuid
+  /services:
+    get:
+      operationId: services_list
+      description: ''
+      parameters:
+      - name: limit
+        in: query
+        description: Number of results to return per page.
+        required: false
+        type: integer
+      - name: offset
+        in: query
+        description: The initial index from which to return the results.
+        required: false
+        type: integer
+      responses:
+        '200':
+          description: ''
+          schema:
+            required:
+            - count
+            - results
+            type: object
+            properties:
+              count:
+                type: integer
+              next:
+                type: string
+                format: uri
+                x-nullable: true
+              previous:
+                type: string
+                format: uri
+                x-nullable: true
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/Service'
+      tags:
+      - services
+    post:
+      operationId: services_create
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/Service'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/Service'
+      tags:
+      - services
+    parameters: []
+  /services/{id}:
+    get:
+      operationId: services_read
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Service'
+      tags:
+      - services
+    put:
+      operationId: services_update
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/Service'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Service'
+      tags:
+      - services
+    patch:
+      operationId: services_partial_update
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/Service'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Service'
+      tags:
+      - services
+    delete:
+      operationId: services_delete
+      description: ''
+      parameters: []
+      responses:
+        '204':
+          description: ''
+      tags:
+      - services
+    parameters:
+    - name: id
+      in: path
+      description: A UUID string identifying this service.
+      required: true
+      type: string
+      format: uuid
+  /user/check_phone:
+    post:
+      operationId: user_check_phone
+      description: ''
+      parameters: []
+      responses:
+        '201':
+          description: ''
+      tags:
+      - user
+    parameters: []
+  /user/delete_account:
+    post:
+      operationId: user_delete_account
+      description: ''
+      parameters: []
+      responses:
+        '201':
+          description: ''
+      tags:
+      - user
+    parameters: []
+  /user/login_via_facebook:
+    post:
+      operationId: user_login_via_facebook
+      description: ''
+      parameters: []
+      responses:
+        '201':
+          description: ''
+      tags:
+      - user
+    parameters: []
+  /user/login_via_google:
+    post:
+      operationId: user_login_via_google
+      description: ''
+      parameters: []
+      responses:
+        '201':
+          description: ''
+      tags:
+      - user
+    parameters: []
+  /user/login_via_phone:
+    post:
+      operationId: user_login_via_phone
+      description: ''
+      parameters: []
+      responses:
+        '201':
+          description: ''
+      tags:
+      - user
+    parameters: []
+  /user/register_via_sms:
+    post:
+      operationId: user_register_via_sms
+      description: ''
+      parameters: []
+      responses:
+        '201':
+          description: ''
+      tags:
+      - user
+    parameters: []
+  /user/restore_password:
+    post:
+      operationId: user_restore_password
+      description: ''
+      parameters: []
+      responses:
+        '201':
+          description: ''
+      tags:
+      - user
+    parameters: []
+  /user/send_confirmation_code:
+    post:
+      operationId: user_send_confirmation_code
+      description: ''
+      parameters: []
+      responses:
+        '201':
+          description: ''
+      tags:
+      - user
+    parameters: []
+  /user/update_password:
+    post:
+      operationId: user_update_password
+      description: ''
+      parameters: []
+      responses:
+        '201':
+          description: ''
+      tags:
+      - user
+    parameters: []
+  /user/validate_password:
+    post:
+      operationId: user_validate_password
+      description: ''
+      parameters: []
+      responses:
+        '201':
+          description: ''
+      tags:
+      - user
+    parameters: []
+  /user/validate_phone:
+    post:
+      operationId: user_validate_phone
+      description: ''
+      parameters: []
+      responses:
+        '201':
+          description: ''
+      tags:
+      - user
+    parameters: []
+  /user/verify_confirmation_code:
+    post:
+      operationId: user_verify_confirmation_code
+      description: ''
+      parameters: []
+      responses:
+        '201':
+          description: ''
+      tags:
+      - user
+    parameters: []
+definitions:
+  Country:
+    required:
+    - name
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      name:
+        title: Name
+        type: string
+        maxLength: 100
+        minLength: 1
+  City:
+    required:
+    - country
+    - name
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      country:
+        $ref: '#/definitions/Country'
+      name:
+        title: Name
+        type: string
+        maxLength: 100
+        minLength: 1
+  Image:
+    type: object
+    properties:
+      id:
+        title: Id
+        type: string
+        format: uuid
+        readOnly: true
+      image:
+        title: Image
+        type: string
+        readOnly: true
+        format: uri
+  ClientProfileRead:
+    required:
+    - city
+    - avatar
+    type: object
+    properties:
+      id:
+        title: Id
+        type: string
+        format: uuid
+        readOnly: true
+      city:
+        $ref: '#/definitions/City'
+      first_name:
+        title: First name
+        type: string
+        readOnly: true
+      last_name:
+        title: Last name
+        type: string
+        readOnly: true
+      is_social_account:
+        title: Is social account
+        type: boolean
+      is_required_field_fill:
+        title: Is required field fill
+        type: string
+        readOnly: true
+      avatar:
+        $ref: '#/definitions/Image'
+      email:
+        title: Email
+        type: string
+        readOnly: true
+      phone_number:
+        title: Phone number
+        type: string
+        readOnly: true
+      created:
+        title: Created
+        type: string
+        format: date-time
+        readOnly: true
+      modified:
+        title: Modified
+        type: string
+        format: date-time
+        readOnly: true
+  ClientProfile:
+    required:
+    - avatar
+    - phone_number
+    - first_name
+    - last_name
+    - email
+    - city
+    - country
+    type: object
+    properties:
+      id:
+        title: Id
+        type: string
+        format: uuid
+        readOnly: true
+      avatar:
+        title: Avatar
+        type: string
+        format: uuid
+      phone_number:
+        title: Phone number
+        type: string
+        minLength: 1
+      first_name:
+        title: First name
+        type: string
+        minLength: 1
+      last_name:
+        title: Last name
+        type: string
+        minLength: 1
+      email:
+        title: Email
+        type: string
+        format: email
+        minLength: 1
+      city:
+        title: City
+        type: string
+        minLength: 1
+      country:
+        title: Country
+        type: string
+        minLength: 1
+  MasterEducation:
+    required:
+    - master
+    - education
+    - photos
+    type: object
+    properties:
+      id:
+        title: Id
+        type: string
+        format: uuid
+        readOnly: true
+      master:
+        title: Master
+        type: string
+        format: uuid
+      education:
+        title: Education
+        type: string
+        minLength: 1
+      photos:
+        type: array
+        items:
+          $ref: '#/definitions/Image'
+  Category:
+    required:
+    - name
+    type: object
+    properties:
+      id:
+        title: Id
+        type: string
+        format: uuid
+        readOnly: true
+      name:
+        title: Name
+        type: string
+        maxLength: 150
+        minLength: 1
+      icon:
+        title: Icon
+        type: string
+        readOnly: true
+        x-nullable: true
+        format: uri
+  SubCategory:
+    required:
+    - name
+    - category
+    type: object
+    properties:
+      id:
+        title: Id
+        type: string
+        format: uuid
+        readOnly: true
+      name:
+        title: Name
+        type: string
+        maxLength: 150
+        minLength: 1
+      category:
+        $ref: '#/definitions/Category'
+      icon:
+        title: Icon
+        type: string
+        readOnly: true
+        x-nullable: true
+        format: uri
+  Address:
+    required:
+    - city
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      city:
+        $ref: '#/definitions/City'
+      street:
+        title: Street
+        type: string
+        maxLength: 255
+        x-nullable: true
+      house_number:
+        title: House number
+        type: string
+        maxLength: 10
+        x-nullable: true
+      apartment_number:
+        title: Apartment number
+        type: string
+        maxLength: 10
+        x-nullable: true
+      postal_code:
+        title: Postal code
+        type: string
+        maxLength: 10
+        x-nullable: true
+  ReasonCancel:
+    required:
+    - reason
+    type: object
+    properties:
+      id:
+        title: Id
+        type: string
+        format: uuid
+        readOnly: true
+      reason:
+        title: Reason
+        type: string
+        maxLength: 255
+        minLength: 1
+  Order:
+    required:
+    - title
+    - description
+    - subcategory
+    - city
+    - at_home_client
+    - address
+    - client
+    - images
+    - reason_cancel
+    type: object
+    properties:
+      id:
+        title: Id
+        type: string
+        format: uuid
+        readOnly: true
+      title:
+        title: Title
+        type: string
+        maxLength: 255
+        minLength: 1
+      description:
+        title: Description
+        type: string
+        minLength: 1
+      subcategory:
+        $ref: '#/definitions/SubCategory'
+      city:
+        $ref: '#/definitions/City'
+      at_home_client:
+        title: At home client
+        type: boolean
+      address:
+        $ref: '#/definitions/Address'
+      type_price:
+        title: Type price
+        type: string
+        enum:
+        - in_a_hour
+        - per_price
+        - for_the_service
+        x-nullable: true
+      price:
+        title: Price
+        type: string
+        format: decimal
+        x-nullable: true
+      client:
+        title: Client
+        type: string
+        format: uuid
+      master:
+        title: Master
+        type: string
+        readOnly: true
+      images:
+        type: array
+        items:
+          $ref: '#/definitions/Image'
+      status:
+        title: Status
+        type: string
+        enum:
+        - search_for_performers
+        - pending
+        - in_progress
+        - completed
+        - cancelled
+      archived:
+        title: Archived
+        type: boolean
+      created:
+        title: Created
+        type: string
+        format: date-time
+        readOnly: true
+      deadline:
+        title: Deadline
+        type: string
+        format: date
+        x-nullable: true
+      for_all:
+        title: For all
+        type: boolean
+      modified:
+        title: Modified
+        type: string
+        format: date-time
+        readOnly: true
+      responses_count:
+        title: Responses count
+        type: integer
+        readOnly: true
+      reason_cancel:
+        $ref: '#/definitions/ReasonCancel'
+  Review:
+    required:
+    - order
+    - rating
+    - photos
+    type: object
+    properties:
+      id:
+        title: Id
+        type: string
+        format: uuid
+        readOnly: true
+      order:
+        $ref: '#/definitions/Order'
+      author_name:
+        title: Author name
+        type: string
+        readOnly: true
+        minLength: 1
+      recipient_name:
+        title: Recipient name
+        type: string
+        readOnly: true
+        minLength: 1
+      rating:
+        title: Rating
+        type: integer
+        maximum: 5
+        minimum: 1
+      comment:
+        title: Comment
+        type: string
+        x-nullable: true
+      photos:
+        type: array
+        items:
+          $ref: '#/definitions/Image'
+      created:
+        title: Created
+        type: string
+        format: date-time
+        readOnly: true
+      modified:
+        title: Modified
+        type: string
+        format: date-time
+        readOnly: true
+  Service:
+    required:
+    - name
+    - subcategory
+    type: object
+    properties:
+      id:
+        title: Id
+        type: string
+        format: uuid
+        readOnly: true
+      name:
+        title: Name
+        type: string
+        maxLength: 150
+        minLength: 1
+      subcategory:
+        title: Subcategory
+        type: string
+        format: uuid
+      description:
+        title: Description
+        type: string
+        x-nullable: true
+      created_by_master:
+        title: Created by master
+        type: string
+        format: uuid
+        x-nullable: true
+      created:
+        title: Created
+        type: string
+        format: date-time
+        readOnly: true
+      modified:
+        title: Modified
+        type: string
+        format: date-time
+        readOnly: true
+  MasterServiceDetail:
+    required:
+    - master
+    - service
+    - type_price
+    - price
+    - photos
+    type: object
+    properties:
+      id:
+        title: Id
+        type: string
+        format: uuid
+        readOnly: true
+      master:
+        title: Master
+        type: string
+        format: uuid
+      service:
+        $ref: '#/definitions/Service'
+      type_price:
+        title: Type price
+        type: string
+        enum:
+        - in_a_hour
+        - per_price
+        - for_the_service
+      price:
+        title: Price
+        type: string
+        format: decimal
+      custom_description:
+        title: Custom description
+        type: string
+        x-nullable: true
+      photos:
+        type: array
+        items:
+          $ref: '#/definitions/Image'
+      created:
+        title: Created
+        type: string
+        format: date-time
+        readOnly: true
+      modified:
+        title: Modified
+        type: string
+        format: date-time
+        readOnly: true
+  MasterSpecialization:
+    required:
+    - master
+    - subcategory
+    - experience
+    - work_days
+    - work_start
+    - work_end
+    type: object
+    properties:
+      id:
+        title: Id
+        type: string
+        format: uuid
+        readOnly: true
+      master:
+        title: Master
+        type: string
+        format: uuid
+      subcategory:
+        title: Subcategory
+        type: string
+        format: uuid
+      experience:
+        title: Experience
+        type: string
+        enum:
+        - Less than 1 year
+        - 1 year
+        - 2 years
+        - 3 years
+        - 4 years
+        - 5 years
+        - 6 years
+        - 7 years
+        - 8 years
+        - 9 years
+        - 10 years
+        - More than 10 years
+      work_days:
+        type: array
+        items:
+          title: Work days
+          type: string
+          enum:
+          - MON
+          - TUE
+          - WED
+          - THU
+          - FRI
+          - SAT
+          - SUN
+      work_start:
+        title: Work start
+        type: string
+      work_end:
+        title: Work end
+        type: string
+      description:
+        title: Description
+        type: string
+        x-nullable: true
+      service_details:
+        type: array
+        items:
+          $ref: '#/definitions/MasterServiceDetail'
+        readOnly: true
+      created:
+        title: Created
+        type: string
+        format: date-time
+        readOnly: true
+      modified:
+        title: Modified
+        type: string
+        format: date-time
+        readOnly: true
+  SpecialOffer:
+    required:
+    - master
+    - subcategory
+    - discount
+    - description
+    - valid_duration
+    type: object
+    properties:
+      id:
+        title: Id
+        type: string
+        format: uuid
+        readOnly: true
+      master:
+        title: Master
+        type: string
+        format: uuid
+      subcategory:
+        title: Subcategory
+        type: string
+        format: uuid
+      discount:
+        title: Discount
+        type: integer
+        enum:
+        - 5
+        - 10
+        - 15
+        - 20
+        - 25
+        - 30
+        - 50
+        - 100
+      description:
+        title: Description
+        type: string
+        minLength: 1
+      valid_from:
+        title: Valid from
+        type: string
+        format: date
+      valid_duration:
+        title: Valid duration
+        type: string
+        enum:
+        - 1W
+        - 2W
+        - 3W
+        - 1M
+        - U
+      valid_to:
+        title: Valid to
+        type: string
+        format: date
+        readOnly: true
+      is_active:
+        title: Is active
+        type: boolean
+        readOnly: true
+      created:
+        title: Created
+        type: string
+        format: date-time
+        readOnly: true
+      modified:
+        title: Modified
+        type: string
+        format: date-time
+        readOnly: true
+  MasterProfilePublic:
+    required:
+    - avatar
+    - first_name
+    - last_name
+    - email
+    type: object
+    properties:
+      id:
+        title: Id
+        type: string
+        format: uuid
+        readOnly: true
+      avatar:
+        $ref: '#/definitions/Image'
+      first_name:
+        title: First name
+        type: string
+        minLength: 1
+      last_name:
+        title: Last name
+        type: string
+        minLength: 1
+      email:
+        title: Email
+        type: string
+        format: email
+        minLength: 1
+      name_organization:
+        title: Name organization
+        type: string
+        maxLength: 150
+        x-nullable: true
+      gender:
+        title: Gender
+        type: string
+        enum:
+        - male
+        - female
+        x-nullable: true
+      date_of_birth:
+        title: Date of birth
+        type: string
+        format: date
+        x-nullable: true
+      description:
+        title: Description
+        type: string
+        x-nullable: true
+      education:
+        type: array
+        items:
+          $ref: '#/definitions/MasterEducation'
+        readOnly: true
+      is_verify:
+        title: Is verify
+        type: boolean
+      is_publish:
+        title: Is publish
+        type: boolean
+      average_rating_value:
+        title: Average rating value
+        type: number
+        readOnly: true
+      reviews_count:
+        title: Reviews count
+        type: integer
+        readOnly: true
+      reviews:
+        type: array
+        items:
+          $ref: '#/definitions/Review'
+        readOnly: true
+      specializations:
+        type: array
+        items:
+          $ref: '#/definitions/MasterSpecialization'
+        readOnly: true
+      special_offers:
+        type: array
+        items:
+          $ref: '#/definitions/SpecialOffer'
+        readOnly: true
+      completed_orders:
+        title: Completed orders
+        type: string
+        readOnly: true
+      created:
+        title: Created
+        type: string
+        format: date-time
+        readOnly: true
+      modified:
+        title: Modified
+        type: string
+        format: date-time
+        readOnly: true
+  MasterProfilePrivate:
+    required:
+    - avatar
+    - first_name
+    - last_name
+    - email
+    - is_organization
+    - addresses
+    type: object
+    properties:
+      id:
+        title: Id
+        type: string
+        format: uuid
+        readOnly: true
+      avatar:
+        $ref: '#/definitions/Image'
+      first_name:
+        title: First name
+        type: string
+        minLength: 1
+      last_name:
+        title: Last name
+        type: string
+        minLength: 1
+      email:
+        title: Email
+        type: string
+        format: email
+        minLength: 1
+      is_social_account:
+        title: Is social account
+        type: boolean
+      is_organization:
+        title: Is organization
+        type: boolean
+      name_organization:
+        title: Name organization
+        type: string
+        maxLength: 150
+        x-nullable: true
+      gender:
+        title: Gender
+        type: string
+        enum:
+        - male
+        - female
+        x-nullable: true
+      date_of_birth:
+        title: Date of birth
+        type: string
+        format: date
+        x-nullable: true
+      description:
+        title: Description
+        type: string
+        x-nullable: true
+      addresses:
+        type: array
+        items:
+          $ref: '#/definitions/Address'
+      education:
+        type: array
+        items:
+          $ref: '#/definitions/MasterEducation'
+        readOnly: true
+      passport_front:
+        title: Passport front
+        type: string
+        format: uuid
+        x-nullable: true
+      passport_back:
+        title: Passport back
+        type: string
+        format: uuid
+        x-nullable: true
+      is_verify:
+        title: Is verify
+        type: boolean
+      is_publish:
+        title: Is publish
+        type: boolean
+      average_rating_value:
+        title: Average rating value
+        type: number
+        readOnly: true
+      reviews_count:
+        title: Reviews count
+        type: integer
+        readOnly: true
+      reviews:
+        type: array
+        items:
+          $ref: '#/definitions/Review'
+        readOnly: true
+      specializations:
+        type: array
+        items:
+          $ref: '#/definitions/MasterSpecialization'
+        readOnly: true
+      special_offers:
+        type: array
+        items:
+          $ref: '#/definitions/SpecialOffer'
+        readOnly: true
+      completed_orders:
+        title: Completed orders
+        type: string
+        readOnly: true
+      created:
+        title: Created
+        type: string
+        format: date-time
+        readOnly: true
+      modified:
+        title: Modified
+        type: string
+        format: date-time
+        readOnly: true

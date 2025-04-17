@@ -1,0 +1,24 @@
+{
+  "name": "nuxt-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@nuxt/image": "^1.8.1",
+    "@pinia/nuxt": "^0.5.5",
+    "axios": "^1.7.7",
+    "country-list-with-dial-code-and-flag": "^5.0.6",
+    "firebase": "^11.0.1",
+    "nuxt": "^3.13.2",
+    "pinia": "^2.2.4",
+    "sass": "^1.80.4",
+    "vue": "latest",
+    "vue-router": "latest"
+  }
+}

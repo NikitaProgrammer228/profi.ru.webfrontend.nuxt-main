@@ -53,7 +53,7 @@
         </div>
         <div class="block">
             <p>City</p>
-            <BaseInput type="text" v-model="user.city" placeholder="City" />
+            <CityInput v-model:city="user.city" placeholder="City" />
         </div>
         <div class="block" v-if="!isGoogle">
             <p>E-mail address</p>
@@ -74,8 +74,10 @@ import BaseCheckbox from '../UI/BaseCheckbox.vue';
 import { register, loginByGoogle, verifyCode, completeRegistration } from '~/app/api/authApi';
 import PhoneInput from '../UI/PhoneInput.vue';
 import { getClient } from '~/app/api/clientApi';
+import CityInput from '~/components/orders/CityInput.vue';
+import type { City } from '~/stores/userStore';
 
-defineProps({
+const props = defineProps({
     master: {
         type: Boolean,
         default: false
@@ -108,7 +110,7 @@ const performer = ref({
 interface UserData {
     last_name: string;
     first_name: string;
-    city: string;
+    city: string | City;
     email: string;
 }
 
@@ -127,17 +129,24 @@ const validReg = computed(() => {
     
     const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     const { last_name, first_name, city, email } = user.value;
+    
+    let hasValidCity = false;
+    if (typeof city === 'string') {
+        hasValidCity = city.length > 0;
+    } else if (city && typeof city === 'object') {
+        hasValidCity = Boolean(city.name && city.country?.name);
+    }
 
     if (!isGoogle.value) {
         return last_name.length > 0 && 
                first_name.length > 0 && 
-               city.length > 0 &&
+               hasValidCity &&
                emailPattern.test(email);
     }
     
     return last_name.length > 0 && 
            first_name.length > 0 && 
-           city.length > 0;
+           hasValidCity;
 });
 
 async function sendCode() {
@@ -193,9 +202,43 @@ function updatePhone(value: { digits: string; phone: number }) {
 async function complete() {
     try {
         const client = await getClient();
-        await completeRegistration(user.value, client.id);
-        await userStore.checkAuth();
-        navigateTo('/client/catalog');
+        let cityValue;
+        
+        if (!user.value.city) {
+            errorMessage.value = 'Please select a city';
+            return;
+        }
+
+        if (typeof user.value.city === 'string') {
+            cityValue = user.value.city;
+        } else if (user.value.city && typeof user.value.city === 'object' && user.value.city.name) {
+            cityValue = user.value.city.name;
+            if (user.value.city.country?.name) {
+                cityValue = `${user.value.city.name}, ${user.value.city.country.name}`;
+            }
+        } else {
+            errorMessage.value = 'Invalid city format';
+            return;
+        }
+        
+        const res = await completeRegistration({
+            first_name: user.value.first_name,
+            last_name: user.value.last_name,
+            city: cityValue,
+            email: user.value.email,
+            phone_number: client.phone_number
+        }, client.id);
+
+        if (res) {
+            await userStore.checkAuth();
+            if (props.master) {
+                navigateTo('/master/auth/category');
+            } else {
+                navigateTo('/client/catalog');
+            }
+        } else {
+            errorMessage.value = 'Registration failed. Please try again.';
+        }
     } catch (error) {
         console.error('Error completing registration:', error);
         errorMessage.value = 'Error completing registration. Please try again.';

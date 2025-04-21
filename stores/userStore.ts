@@ -2,7 +2,7 @@ import { setToken } from "~/app/api";
 import { getClient } from "~/app/api/clientApi";
 import { navigateTo } from "#app";
 
-interface City {
+export interface City {
     id: string;
     name: string;
     country: {

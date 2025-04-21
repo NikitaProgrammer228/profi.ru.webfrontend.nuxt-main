@@ -141,6 +141,7 @@ const validReg = computed(() => {
 });
 
 async function sendCode() {
+    localStorage.clear()
     const res = await register({
         phone_number: digits.value + phone.value,
         password: password.value,

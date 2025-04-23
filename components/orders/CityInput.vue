@@ -12,7 +12,7 @@
             <BaseInput type="search" v-model="search" placeholder="Search" style="margin-bottom: -10px;" @input="searchCities" />
             <div class="dropdown__items" v-memo="[search]">
                 <div class="dropdown__item" v-for="(item, i) in uniqueCities" :key="i" @click="selectCity(item)">
-                    <span>{{ item.formatted_address }}</span>
+                    <span>{{ item.address_dict.city }}</span>
                 </div>
             </div>
         </div>
@@ -23,8 +23,9 @@
 
 <script setup lang="ts">
 import BaseInput from '../UI/BaseInput.vue';
-import { findCity, type FindAddressModel } from '~/app/api/locationApi';
+import { findCity, getOrCreateCity, type FindAddressModel } from '~/app/api/locationApi';
 import type { City } from '~/stores/userStore';
+import type { CityData } from '~/app/api/types';
 
 // Custom debounce function
 function debounce<T extends (...args: any[]) => any>(fn: T, delay: number) {
@@ -43,7 +44,7 @@ const props = defineProps<{
     error?: string;
 }>();
 
-const emit = defineEmits(['update:city', 'blur', 'focus']);
+const emit = defineEmits(['update:city', 'blur', 'focus', 'update:error']);
 
 const opened = ref(false);
 const selectRef = ref(null);
@@ -54,16 +55,14 @@ const loading = ref(false);
 const displayValue = computed(() => {
     if (!props.value) return props.placeholder || 'Select';
     if (typeof props.value === 'string') return props.value;
-    return props.value.name && props.value.country?.name 
-        ? `${props.value.name}${props.value.country.name ? `, ${props.value.country.name}` : ''}`
-        : props.placeholder || 'Select';
+    return props.value.name || props.placeholder || 'Select';
 });
 
 const uniqueCities = computed(() => {
     const uniqueMap = new Map();
     cities.value.forEach(item => {
         if (!item?.address_dict) return;
-        const key = `${item.address_dict.country}-${item.address_dict.city}`;
+        const key = item.address_dict.city.toLowerCase();
         if (!uniqueMap.has(key)) {
             uniqueMap.set(key, item);
         }
@@ -82,15 +81,11 @@ async function searchCities() {
         const results = await findCity(search.value);
         if (results && Array.isArray(results)) {
             cities.value = results.filter(item => {
-                if (!item?.address_dict) return false;
+                if (!item?.address_dict?.city) return false;
                 const searchLower = search.value.toLowerCase().trim();
-                const cityName = item.address_dict.city?.toLowerCase().trim() || '';
-                const countryName = item.address_dict.country?.toLowerCase().trim() || '';
-                const formattedAddress = item.formatted_address?.toLowerCase().trim() || '';
+                const cityName = item.address_dict.city.toLowerCase().trim();
                 
-                return cityName.includes(searchLower) ||
-                       countryName.includes(searchLower) ||
-                       formattedAddress.includes(searchLower);
+                return cityName.includes(searchLower);
             });
         } else {
             cities.value = [];
@@ -103,14 +98,14 @@ async function searchCities() {
     }
 }
 
-function selectCity(city: FindAddressModel) {
-    if (!city?.address_dict) return;
+async function selectCity(city: FindAddressModel) {
+    if (!city?.address_dict?.city) return;
     
-    const selectedCity: City = {
-        id: '',
-        name: city.address_dict.city || '',
+    const selectedCity: CityData = {
+        id: city.id || 0,
+        name: city.address_dict.city,
         country: {
-            id: '',
+            id: city.country_id || 0,
             name: city.address_dict.country || ''
         }
     };

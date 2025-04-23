@@ -3,12 +3,12 @@ import { getClient } from "~/app/api/clientApi";
 import { navigateTo } from "#app";
 
 export interface City {
-    id: string;
+    id: number;
     name: string;
     country: {
-        id: string;
+        id: number;
         name: string;
-    }
+    };
 }
 
 interface Profile {
@@ -62,10 +62,10 @@ export const useUserStore = defineStore("user", () => {
     const profile = ref<Profile>({
         id: "",
         city: {
-            id: "",
+            id: 1,
             name: "",
             country: {
-                id: "",
+                id: 1,
                 name: ""
             }
         },
@@ -115,17 +115,17 @@ export const useUserStore = defineStore("user", () => {
                 profile.value = {
                     id: client.id || "",
                     city: typeof client.city === 'string' ? {
-                        id: "",
+                        id: 1,
                         name: client.city,
                         country: {
-                            id: "",
+                            id: 1,
                             name: ""
                         }
                     } : (client.city as City) || {
-                        id: "",
+                        id: 1,
                         name: "",
                         country: {
-                            id: "",
+                            id: 1,
                             name: ""
                         }
                     },
@@ -191,10 +191,10 @@ export const useUserStore = defineStore("user", () => {
         profile.value = {
             id: "",
             city: {
-                id: "",
+                id: 1,
                 name: "",
                 country: {
-                    id: "",
+                    id: 1,
                     name: ""
                 }
             },

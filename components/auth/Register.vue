@@ -202,29 +202,19 @@ function updatePhone(value: { digits: string; phone: number }) {
 async function complete() {
     try {
         const client = await getClient();
-        let cityValue;
         
-        if (!user.value.city) {
+        if (!user.value.city || typeof user.value.city === 'string') {
             errorMessage.value = 'Please select a city';
             return;
         }
 
-        if (typeof user.value.city === 'string') {
-            cityValue = user.value.city;
-        } else if (user.value.city && typeof user.value.city === 'object' && user.value.city.name) {
-            cityValue = user.value.city.name;
-            if (user.value.city.country?.name) {
-                cityValue = `${user.value.city.name}, ${user.value.city.country.name}`;
-            }
-        } else {
-            errorMessage.value = 'Invalid city format';
-            return;
-        }
-        
         const res = await completeRegistration({
             first_name: user.value.first_name,
             last_name: user.value.last_name,
-            city: cityValue,
+            city: user.value.city.name,
+            country: user.value.city.country?.name || '',
+            phone_code: digits.value || '',
+            phone_country_code: digits.value || '',
             email: user.value.email,
             phone_number: client.phone_number
         }, client.id);

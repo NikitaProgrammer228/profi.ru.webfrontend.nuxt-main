@@ -1,9 +1,9 @@
 import { api } from ".";
-import type { CompletePayload } from "./types";
+import type { CompletePayload, CityData } from "./types";
 
 export interface Profile {
     id: string;
-    city: string;
+    city: CityData;
     first_name: string;
     last_name: string;
     is_social_account?: boolean;

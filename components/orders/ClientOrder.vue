@@ -28,7 +28,7 @@
             </div>
             <div class="info">
                 <img loading="lazy" src="~/assets/icons/location.svg" alt="location" />
-                {{ `${order.city?.name}, ${order.city?.country?.name}` || order.address || 'No location' }}
+                {{ formatAddress(order) }}
             </div>
             <div class="info">
                 <img loading="lazy" src="~/assets/icons/price.svg" alt="price" />
@@ -46,6 +46,7 @@ import type { PropType } from 'vue';
 import BaseBlock from '../UI/BaseBlock.vue';
 import BaseButton from '../UI/BaseButton.vue';
 import { type Order, orderGetResponses, orderGetRecommendedMasters, getOrder } from '~/app/api/orderApi';
+import { type City, type Address } from '~/app/api/locationApi';
 import { useOrderStore } from '~/stores/orderStore';
 
 const props = defineProps({
@@ -62,6 +63,23 @@ const status = useParseStatus(props.order.status);
 const created = useParseTime(props.order.created);
 const deadline = useParseDeadline(props.order.deadline);
 const priceType = useParsePriceType(props.order.type_price);
+
+function formatAddress(order: Order): string {
+    const parts = [];
+    
+    // Проверяем и используем поле city из заказа
+    if (order.city && typeof order.city === 'object') {
+        const cityObj = order.city as unknown as { name: string; country?: { name: string } };
+        if (cityObj.country?.name) {
+            parts.push(cityObj.country.name);
+        }
+        if (cityObj.name) {
+            parts.push(cityObj.name);
+        }
+    }
+    
+    return parts.join(', ') || 'No location';
+}
 
 async function redirect(order: Order) {
     orderStore.currentOrder = order;

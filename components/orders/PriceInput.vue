@@ -1,17 +1,17 @@
 <template>
     <div class="offer-input">
         <div class="input-wrapper">
-            <span>{{ values[response.currency].value }}</span>
-            <input type="number" :value="price" @input="$emit('update:price', $event.target.value)"
+            <span>{{ selectedCurrency?.symbol || '$' }}</span>
+            <input type="number" :value="price" @input="onPriceInput"
                 placeholder="Your price">
         </div>
         <div class="change-value" @click="show = !show" ref="selectRef">
-            {{ response.currency }}
+            {{ selectedCurrency?.code || 'USD' }}
             <img loading="lazy" src="~/assets/icons/arrow-down.svg" alt="arrow" />
 
             <div class="dropdown" v-if="show">
-                <div class="dropdown__item" v-for="(item, i) in values" :key="i" @click="changeValue(item.title)">
-                    {{ item.title }}
+                <div class="dropdown__item" v-for="currency in currencies" :key="currency.id" @click="changeValue(currency)">
+                    {{ currency.code }} ({{ currency.fullname }})
                 </div>
             </div>
         </div>
@@ -19,31 +19,46 @@
 </template>
 
 <script setup lang="ts">
+import { getCurrencies, type Currency } from '~/app/api/locationApi';
+
 const props = defineProps<{
-    response: any,
+    response: { currency: number },
     price: number | null | string | undefined
 }>();
 
-const values = ref({
-    'USD': {
-        title: 'USD',
-        value: '$',
-    },
-    'EUR': {
-        title: 'EUR',
-        value: '€',
-    },
-    'RUB': {
-        title: 'RUB',
-        value: '₽',
-    }
-});
+const emit = defineEmits(['update:price']);
+
+const currencies = ref<Currency[]>([]);
 const show = ref(false);
 const selectRef = ref(null);
 
-function changeValue(value: string) {
-    props.response.currency = value;
+const selectedCurrency = computed(() => 
+    currencies.value.find(c => c.id === props.response.currency)
+);
+
+function onPriceInput(event: Event) {
+    const target = event.target as HTMLInputElement;
+    emit('update:price', target.value);
 }
+
+function changeValue(currency: Currency) {
+    props.response.currency = currency.id;
+    show.value = false;
+}
+
+onMounted(async () => {
+    try {
+        currencies.value = await getCurrencies();
+        // If no currency is selected, set the first one (usually USD) as default
+        if (!props.response.currency && currencies.value.length > 0) {
+            props.response.currency = currencies.value[0].id;
+        }
+    } catch (error) {
+        console.error('Failed to load currencies:', error);
+    }
+});
+
+useClickOutside(selectRef, () => show.value = false);
 </script>
 
 <style lang="scss" scoped>

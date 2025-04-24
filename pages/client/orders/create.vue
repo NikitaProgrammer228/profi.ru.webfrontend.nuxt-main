@@ -4,6 +4,9 @@
   <BaseBlock :center="false" v-if="!isCategorySelect">
     <h2>Select performers without any hassle</h2>
     <div class="form">
+      <div v-if="error" class="error-message">
+        {{ error }}
+      </div>
       <BaseInput placeholder="Short task name" type="text" style="max-width: 100%;" v-model="order.title" />
       <BaseTextarea placeholder="Tell us about your task" v-model="order.description"></BaseTextarea>
       <div class="offer-input" @click="isCategorySelect = true">
@@ -12,7 +15,7 @@
           <img loading="lazy" src="~/assets/icons/arrow-down.svg" alt="arrow-down" />
         </div>
       </div>
-      <CityInput :placeholder="'City'" :value="order.city" @update:city="(city) => order.city = city"></CityInput>
+      <AddressInput v-model:value="selectedAddress" placeholder="address"></AddressInput>
       <PriceInput :response="response" v-model:price="order.price" />
       <div class="offer-input-type">
         <div class="type" v-for="typeOfPrice in ['in_a_hour', 'per_price', 'for_the_service']" :key="typeOfPrice"
@@ -68,7 +71,8 @@
 <script setup lang="ts">
 import type { Category } from '~/app/api/categoryApi';
 import { getOrder, postOrder, type Order } from '~/app/api/orderApi';
-import CityInput from '~/components/orders/CityInput.vue';
+import { getUserAddresses, type FindAddressModel } from '~/app/api/locationApi';
+import AddressInput from '~/components/orders/AddressInput.vue';
 import PriceInput from '~/components/orders/PriceInput.vue';
 import BackButton from '~/components/UI/BackButton.vue';
 import BaseBlock from '~/components/UI/BaseBlock.vue';
@@ -88,6 +92,8 @@ const isCategorySelect = ref(false);
 const catalog = useCatalogStore();
 const user = useUserStore();
 
+const selectedAddress = ref<FindAddressModel | null>(null);
+
 const categories = computed(() => {
   if (catalog.subcategories.subcategories.length) {
     return catalog.subcategories.subcategories;
@@ -98,7 +104,7 @@ const categoryId = ref('');
 const subcategory = ref();
 
 const response = reactive({
-  currency: 'USD',
+  currency: null,
   images: [] as File[],
   place: '',
   time: '',
@@ -113,22 +119,49 @@ const order = ref({
   at_home_client: false,
   client: user.profile.id,
   subcategory: '',
+  remotely: false,
+  address: '',
+  currency: null
 });
 
-// const orderBase = computed(() => {
-//   return refferenceOrder || orderBase;
-// });
-
-
 const orderCreated = ref(false);
+const error = ref('');
 
 const valid = computed(() => {
-  return order.value.title && order.value.description && order.value.type_price && order.value.price && order.value.city && order.value.subcategory
+  return order.value.title && 
+         order.value.description && 
+         order.value.type_price && 
+         order.value.price && 
+         selectedAddress.value && 
+         order.value.subcategory;
 });
 
 async function createOrder() {
-  orderCreated.value = true;
-  await postOrder(order.value);
+  try {
+    error.value = '';  // Clear any previous errors
+    // Update at_home_client based on selected place
+    order.value.at_home_client = response.place === 'true';
+    
+    // If order is not remote and at client's home, address is required
+    if (!order.value.remotely && order.value.at_home_client) {
+      const addresses = await getUserAddresses(user.profile.id);
+      if (addresses && addresses.length > 0) {
+        order.value.address = addresses[0].id.toString();
+      } else {
+        error.value = 'Please add an address in your profile settings before creating an order at your home.';
+        throw new Error(error.value);
+      }
+    }
+    
+    await postOrder(order.value);
+    orderCreated.value = true;
+  } catch (error) {
+    console.error('Error creating order:', error);
+    if (!error.value) {  // Only set generic error if no specific error is set
+      error.value = 'Failed to create order. Please try again.';
+    }
+    throw error;
+  }
 }
 
 function selectCategory(category: Category) {
@@ -172,6 +205,20 @@ function deleteFile(index: number) {
 watch(() => categoryId.value, async () => {
   if (categoryId.value) {
     await catalog.getAllSubcategories(categoryId.value);
+  }
+});
+
+// Watch for address changes
+watch(selectedAddress, (newAddress) => {
+  if (newAddress) {
+    order.value.city = newAddress.address_dict.city;
+  }
+});
+
+// Watch for currency changes
+watch(() => response.currency, (newCurrency) => {
+  if (newCurrency !== null) {
+    order.value.currency = newCurrency;
   }
 });
 
@@ -333,5 +380,15 @@ h2 {
       }
     }
   }
+}
+
+.error-message {
+  background-color: #fde8e8;
+  color: #e53e3e;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  border: 1px solid #f8b4b4;
 }
 </style>

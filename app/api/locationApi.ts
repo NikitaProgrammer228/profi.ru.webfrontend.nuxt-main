@@ -1,4 +1,6 @@
 import { api } from ".";
+import type { CityData } from "./types";
+import { useUserStore } from "~/stores/userStore";
 
 // Models matching mobile app implementation
 export interface FindAddressDictModel {
@@ -31,11 +33,27 @@ export interface City {
 
 export interface Address {
     id: number;
-    city: City;
-    street?: string;
-    house_number?: string;
-    apartment_number?: string;
-    postal_code?: string;
+    street: string;
+    house_number: string;
+    apartment_number: string;
+    postal_code: string;
+    city: {
+        id: number;
+        name: string;
+        country: {
+            id: number;
+            name: string;
+        };
+        __typename?: string;
+    };
+    __typename?: string;
+}
+
+export interface Currency {
+    id: number;
+    fullname: string;
+    code: string;
+    symbol: string;
 }
 
 interface PaginatedResponse<T> {
@@ -130,8 +148,13 @@ export async function createAddress(data: {
 // Get user addresses
 export async function getUserAddresses(): Promise<Address[]> {
     try {
-        const res = await api.get('/api/v1/client/addresses');
-        return res.data;
+        console.log('Fetching addresses...');
+        const res = await api.get('/api/v1/client/list_addresses');
+        console.log('Raw API response:', res);
+        // Проверяем, есть ли данные и являются ли они массивом
+        const addresses = Array.isArray(res.data) ? res.data : [];
+        console.log('Processed addresses:', addresses);
+        return addresses;
     } catch (error) {
         console.error('Error getting user addresses:', error);
         return [];
@@ -139,12 +162,81 @@ export async function getUserAddresses(): Promise<Address[]> {
 }
 
 // Delete user address
-export async function deleteAddress(id: number): Promise<boolean> {
+export async function deleteAddress(addressId: number): Promise<boolean> {
     try {
-        await api.delete(`/api/v1/client/address/${id}`);
-        return true;
+        console.log('Deleting address with API:', addressId);
+        const userStore = useUserStore();
+        const userId = userStore.profile.id;
+        
+        const response = await api.delete(`/api/v1/client/${userId}/delete_address`, {
+            params: { address_id: addressId }
+        });
+        
+        console.log('Address deleted successfully with status:', response.status);
+        // 204 статус означает успешное удаление без контента в ответе
+        return response.status === 204;
     } catch (error) {
         console.error('Error deleting address:', error);
         return false;
+    }
+}
+
+// Update user address
+export async function updateAddress(addressId: number, data: {
+    city_id: number;
+    city_name: string;
+    street?: string;
+    house_number?: string;
+    apartment_number?: string;
+    postal_code?: string;
+    country?: string;
+}): Promise<Address | null> {
+    try {
+        console.log('Updating address with data:', { addressId, ...data });
+        
+        const userStore = useUserStore();
+        const userId = userStore.profile.id;
+        
+        const res = await api.patch(`/api/v1/client/${userId}/update_address`, {
+            address_dict: {
+                city: data.city_name,
+                country: data.country || '',
+                street: data.street || '',
+                house_number: data.house_number || ''
+            },
+            apartment_number: data.apartment_number || '',
+            postal_code: data.postal_code || ''
+        }, {
+            params: { address_id: addressId }  // Передаем address_id как query параметр
+        });
+        
+        console.log('Update address response:', res.data);
+        return res.data;
+    } catch (error) {
+        console.error('Error updating address:', error);
+        return null;
+    }
+}
+
+// Get list of available currencies
+export async function getCurrencies(): Promise<Currency[]> {
+    const res = await api.get('/api/v1/currency');
+    return res.data.results;
+}
+
+// Find address by query - matches mobile implementation
+export async function findAddress(query: string): Promise<FindAddressModel[]> {
+    try {
+        const res = await api.get(`/api/v1/location/find_address`, {
+            params: { 
+                query,
+                limit: 100
+            },
+            timeout: TIMEOUT
+        });
+        return res.data;
+    } catch (error) {
+        console.error('Error in findAddress:', error);
+        return [];
     }
 } 

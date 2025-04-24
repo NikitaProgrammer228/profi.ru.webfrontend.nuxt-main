@@ -52,7 +52,11 @@ const TIMEOUT = 30000; // 30 seconds
 export async function findCity(query: string): Promise<FindAddressModel[]> {
     try {
         const res = await api.get(`/api/v1/location/find_city`, {
-            params: { query },
+            params: { 
+                query,
+                limit: 100,
+                type: 'city' // Указываем, что ищем только города
+            },
             timeout: TIMEOUT
         });
         return res.data;

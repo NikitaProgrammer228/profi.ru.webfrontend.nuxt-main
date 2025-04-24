@@ -76,6 +76,7 @@ import PhoneInput from '../UI/PhoneInput.vue';
 import { getClient } from '~/app/api/clientApi';
 import CityInput from '~/components/orders/CityInput.vue';
 import type { City } from '~/stores/userStore';
+import { useRouter } from 'vue-router';
 
 const props = defineProps({
     master: {
@@ -89,6 +90,7 @@ const props = defineProps({
 });
 
 const userStore = useUserStore();
+const router = useRouter();
 
 const isCodeInput = ref(false);
 const completedReg = ref(false);
@@ -110,43 +112,28 @@ const performer = ref({
 interface UserData {
     last_name: string;
     first_name: string;
-    city: string | City;
+    city: City | null;
     email: string;
 }
 
 const user = ref<UserData>({
     last_name: '',
     first_name: '',
-    city: '',
-    email: '',
+    city: null,
+    email: ''
 });
 
 const valid = computed(() => {
     return (phone.value.length >= 8) && (password.value.length >= 8) && (password.value === repeatPassword.value) && agree.value
 });
 const validReg = computed(() => {
-    if (!user.value) return false;
-    
-    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    const { last_name, first_name, city, email } = user.value;
-    
-    let hasValidCity = false;
-    if (typeof city === 'string') {
-        hasValidCity = city.length > 0;
-    } else if (city && typeof city === 'object') {
-        hasValidCity = Boolean(city.name && city.country?.name);
-    }
-
-    if (!isGoogle.value) {
-        return last_name.length > 0 && 
-               first_name.length > 0 && 
-               hasValidCity &&
-               emailPattern.test(email);
-    }
-    
-    return last_name.length > 0 && 
-           first_name.length > 0 && 
-           hasValidCity;
+    return user.value.last_name &&
+        user.value.first_name &&
+        user.value.city &&
+        typeof user.value.city === 'object' &&
+        user.value.city.name &&
+        user.value.city.country?.name &&
+        user.value.email;
 });
 
 async function sendCode() {
@@ -199,41 +186,30 @@ function updatePhone(value: { digits: string; phone: number }) {
     phone.value = String(value.phone);
 }
 
-async function complete() {
+const complete = async () => {
+    if (!user.value.city || typeof user.value.city === 'string') {
+        return;
+    }
+
     try {
         const client = await getClient();
-        
-        if (!user.value.city || typeof user.value.city === 'string') {
-            errorMessage.value = 'Please select a city';
-            return;
-        }
-
-        const res = await completeRegistration({
-            first_name: user.value.first_name,
+        await completeRegistration({
             last_name: user.value.last_name,
+            first_name: user.value.first_name,
             city: user.value.city.name,
-            country: user.value.city.country?.name || '',
-            phone_code: digits.value || '',
-            phone_country_code: digits.value || '',
+            country: user.value.city.country.name,
             email: user.value.email,
-            phone_number: client.phone_number
+            phone_number: client.phone_number,
+            phone_code: digits.value,
+            phone_country_code: phone.value
         }, client.id);
 
-        if (res) {
-            await userStore.checkAuth();
-            if (props.master) {
-                navigateTo('/master/auth/category');
-            } else {
-                navigateTo('/client/catalog');
-            }
-        } else {
-            errorMessage.value = 'Registration failed. Please try again.';
-        }
+        router.push('/client/account');
     } catch (error) {
-        console.error('Error completing registration:', error);
-        errorMessage.value = 'Error completing registration. Please try again.';
+        console.error('Registration error:', error);
+        errorMessage.value = 'Registration failed. Please try again.';
     }
-}
+};
 
 const errors = reactive({
     phone: {
@@ -302,7 +278,7 @@ const clearError = (type: 'phone' | 'password' | 'repeatPassword' | 'email') => 
 };
 
 watch(userStore, () => {
-    if (userStore.user?.city) {
+    if (userStore.user?.city && typeof userStore.user.city === 'object') {
         user.value.city = userStore.user.city;
     }
 }, { deep: true });

@@ -40,7 +40,7 @@ const props = defineProps<{
     placeholder?: string;
     type?: string;
     hint?: string;
-    value?: string | City;
+    city?: City | null;
     error?: string;
 }>();
 
@@ -53,9 +53,13 @@ const cities = ref<FindAddressModel[]>([]);
 const loading = ref(false);
 
 const displayValue = computed(() => {
-    if (!props.value) return props.placeholder || 'Select';
-    if (typeof props.value === 'string') return props.value;
-    return props.value.name || props.placeholder || 'Select';
+    if (!props.city) return props.placeholder || 'Select';
+    if (typeof props.city === 'string') return props.city;
+    if (props.city && 'name' in props.city) {
+        const cityObj = props.city as City;
+        return `${cityObj.name}${cityObj.country?.name ? `, ${cityObj.country.name}` : ''}`;
+    }
+    return props.placeholder || 'Select';
 });
 
 const uniqueCities = computed(() => {
@@ -71,7 +75,7 @@ const uniqueCities = computed(() => {
 });
 
 async function searchCities() {
-    if (!search.value || search.value.length < 2) {
+    if (!search.value || search.value.length < 1) {
         cities.value = [];
         return;
     }
@@ -82,10 +86,39 @@ async function searchCities() {
         if (results && Array.isArray(results)) {
             cities.value = results.filter(item => {
                 if (!item?.address_dict?.city) return false;
-                const searchLower = search.value.toLowerCase().trim();
-                const cityName = item.address_dict.city.toLowerCase().trim();
                 
-                return cityName.includes(searchLower);
+                const cityName = item.address_dict.city.toLowerCase().trim();
+                const countryName = (item.address_dict.country || '').toLowerCase().trim();
+                
+                if (cityName.includes('область') || 
+                    cityName.includes('район') || 
+                    cityName.includes('край') ||
+                    cityName.includes('округ')) {
+                    return false;
+                }
+                
+                const searchTerms = search.value.toLowerCase().trim().split(/\s+/);
+                return searchTerms.every(term => 
+                    cityName.includes(term) || countryName.includes(term)
+                );
+            });
+
+            cities.value.sort((a, b) => {
+                const searchLower = search.value.toLowerCase().trim();
+                const cityA = a.address_dict.city.toLowerCase().trim();
+                const cityB = b.address_dict.city.toLowerCase().trim();
+                
+                if (cityA === searchLower && cityB !== searchLower) return -1;
+                if (cityB === searchLower && cityA !== searchLower) return 1;
+                
+                if (cityA.startsWith(searchLower) && !cityB.startsWith(searchLower)) return -1;
+                if (cityB.startsWith(searchLower) && !cityA.startsWith(searchLower)) return 1;
+                
+                if (cityA.length !== cityB.length) {
+                    return cityA.length - cityB.length;
+                }
+                
+                return cityA.localeCompare(cityB);
             });
         } else {
             cities.value = [];

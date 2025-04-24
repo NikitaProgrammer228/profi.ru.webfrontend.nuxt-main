@@ -3,10 +3,16 @@
         Personal Information
         <div class="personal__block">
             <BaseInput type="text-editable" v-model="name" @save="saveProfile" placeholder="Name" />
-            <PhoneInput :value="phone" placeholder="32000243891" @update="updatePhone"
-                :hint="'This is a hint text to help user.'" />
+            <div class="phone-input-wrapper">
+                <div class="phone-display">
+                    <img :src="`https://flagcdn.com/w20/ru.png`" alt="RU" class="flag" />
+                    <span>{{ formatPhoneNumber(user.profile?.phone_number) }}</span>
+                </div>
+            </div>
             <BaseInput type="text-editable" v-model="surname" @save="saveProfile" placeholder="Surname" />
-            <BaseInput type="text-editable" v-model="city" @save="saveProfile" placeholder="City" />
+            <div class="city-input-wrapper">
+                <CityInput v-model:city="selectedCity" placeholder="City" @update:city="onCityChange" />
+            </div>
             <BaseInput type="text-editable" v-model="email" @save="saveProfile" placeholder="Email" />
             <ChangePassword @click="$router.push('/client/account/change-password')" />
         </div>
@@ -18,33 +24,34 @@ import { patchClient, type Profile } from '~/app/api/clientApi';
 import ChangePassword from '~/components/account/client/ChangePassword.vue';
 import BaseBlock from '~/components/UI/BaseBlock.vue';
 import BaseInput from '~/components/UI/BaseInput.vue';
-import PhoneInput from '~/components/UI/PhoneInput.vue';
+import CityInput from '~/components/orders/CityInput.vue';
+import type { City } from '~/stores/userStore';
 
 const user = useUserStore();
 
 const name = ref('');
 const surname = ref('');
-const city = ref('');
+const selectedCity = ref<City | null>(null);
 const email = ref('');
-const phone = ref(0);
-const digits = ref('');
+
+function formatPhoneNumber(phoneNumber?: string) {
+    if (!phoneNumber) return '';
+    return phoneNumber;
+}
 
 onMounted(async () => {
     await user.checkAuth();
     if (user.profile) {
         name.value = user.profile.first_name || '';
         surname.value = user.profile.last_name || '';
-        city.value = user.profile.city?.name || '';
+        selectedCity.value = typeof user.profile.city === 'string' ? null : user.profile.city;
         email.value = user.profile.email || '';
-        if (user.profile.phone_number) {
-            phone.value = Number(user.profile.phone_number.split('+7')[1]) || 0;
-        }
     }
 });
 
-function updatePhone(value: { digits: string; phone: string | number }) {
-    digits.value = value.digits;
-    phone.value = Number(value.phone);
+async function onCityChange(city: City) {
+    selectedCity.value = city;
+    await saveProfile();
 }
 
 async function saveProfile() {
@@ -52,17 +59,22 @@ async function saveProfile() {
         ...user.profile,
         first_name: name.value,
         last_name: surname.value,
-        city: typeof user.profile.city === 'string' ? city.value : {
-            ...user.profile.city,
-            name: city.value
-        },
+        city: selectedCity.value?.name || '',
+        country: selectedCity.value?.country?.name || '',
         email: email.value,
-        phone_number: user.profile.phone_number?.length ? user.profile.phone_number : undefined,
+        phone_number: user.profile.phone_number,
         avatar: user.profile.avatar?.length ? user.profile.avatar : undefined
     };
 
-    const res = await patchClient(profile as unknown as Profile, user.profile.id);
-    user.profile = res as unknown as typeof user.profile;
+    try {
+        const res = await patchClient(profile as unknown as Profile, user.profile.id);
+        if (res) {
+            user.profile = res as unknown as typeof user.profile;
+            selectedCity.value = typeof res.city === 'string' ? null : res.city as City;
+        }
+    } catch (error) {
+        console.error('Error updating profile:', error);
+    }
 }
 </script>
 
@@ -74,6 +86,42 @@ async function saveProfile() {
 
     @media screen and (max-width: 725px) {
         grid-template-columns: 1fr;
+    }
+}
+
+.city-input-wrapper {
+    :deep(.input) {
+        border: 1px solid rgba(156, 156, 156, 1);
+        box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
+        
+        &:hover {
+            border-color: rgba(255, 199, 0, 1);
+        }
+    }
+}
+
+.phone-input-wrapper {
+    .phone-display {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        background: white;
+        border: 1px solid rgba(156, 156, 156, 1);
+        box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
+        border-radius: 6px;
+        height: 42px;
+        
+        .flag {
+            width: 20px;
+            height: 15px;
+            border-radius: 2px;
+        }
+        
+        span {
+            font-size: 16px;
+            color: #1C1C1C;
+        }
     }
 }
 </style>

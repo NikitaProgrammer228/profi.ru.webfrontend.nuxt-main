@@ -11,6 +11,8 @@ export interface Profile {
     avatar?: string;
     email: string;
     phone_number?: string;
+    phone_code?: string;
+    phone_country_code?: string;
     created?: string;
     modified?: string;
 }

@@ -100,20 +100,23 @@ export async function getOrCreateCity(cityName: string, countryName: string): Pr
 // Create address with city reference
 export async function createAddress(data: {
     city_id: number;
+    city_name: string;
     street?: string;
     house_number?: string;
     apartment_number?: string;
     postal_code?: string;
+    country?: string;
 }): Promise<Address | null> {
     try {
-        const res = await api.post('/api/v1/address', {
-            city: {
-                id: data.city_id
+        const res = await api.post('/api/v1/client/add_address', {
+            address_dict: {
+                city: data.city_name,
+                country: data.country || '',
+                street: data.street || '',
+                house_number: data.house_number || ''
             },
-            street: data.street,
-            house_number: data.house_number,
-            apartment_number: data.apartment_number,
-            postal_code: data.postal_code
+            apartment_number: data.apartment_number || '',
+            postal_code: data.postal_code || ''
         }, {
             timeout: TIMEOUT
         });
@@ -121,5 +124,27 @@ export async function createAddress(data: {
     } catch (error) {
         console.error('Error creating address:', error);
         return null;
+    }
+}
+
+// Get user addresses
+export async function getUserAddresses(): Promise<Address[]> {
+    try {
+        const res = await api.get('/api/v1/client/addresses');
+        return res.data;
+    } catch (error) {
+        console.error('Error getting user addresses:', error);
+        return [];
+    }
+}
+
+// Delete user address
+export async function deleteAddress(id: number): Promise<boolean> {
+    try {
+        await api.delete(`/api/v1/client/address/${id}`);
+        return true;
+    } catch (error) {
+        console.error('Error deleting address:', error);
+        return false;
     }
 } 

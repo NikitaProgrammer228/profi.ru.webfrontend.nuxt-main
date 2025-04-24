@@ -102,6 +102,7 @@ const agree = ref(false);
 const codeError = ref(false);
 const errorMessage = ref('');
 const isGoogle = ref(false);
+const selectedCountryCode = ref('RU');
 
 let verificationId = '';
 
@@ -181,9 +182,12 @@ async function ByGoogle() {
     }
 }
 
-function updatePhone(value: { digits: string; phone: number }) {
+function updatePhone(value: { digits: string; phone: number; countryCode?: string }) {
     digits.value = value.digits;
     phone.value = String(value.phone);
+    if (value.countryCode) {
+        selectedCountryCode.value = value.countryCode;
+    }
 }
 
 const complete = async () => {
@@ -201,7 +205,7 @@ const complete = async () => {
             email: user.value.email,
             phone_number: client.phone_number,
             phone_code: digits.value,
-            phone_country_code: phone.value
+            phone_country_code: selectedCountryCode.value
         }, client.id);
 
         router.push('/client/account');

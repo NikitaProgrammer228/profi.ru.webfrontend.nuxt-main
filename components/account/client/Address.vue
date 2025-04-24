@@ -2,20 +2,39 @@
     <div class="address">
         <div class="address__header">
             <p>Do you recieve master at home?</p>
-            <span>Mira street, 1, Tolyatti, Samara region</span>
+            <span>{{ formatAddress }}</span>
         </div>
         <div class="address__actions">
-            <div class="address__action">
-                    <img loading="lazy" src="~/assets/icons/cross.svg" alt="delete" />
-                    Cancel the address
-                </div>
-                <div class="address__action">
-                    <img loading="lazy" src="~/assets/icons/edit.svg" alt="delete" />
-                    Edit address
-                </div>
+            <div class="address__action" @click="$emit('delete')">
+                <img loading="lazy" src="~/assets/icons/cross.svg" alt="delete" />
+                Cancel the address
+            </div>
+            <div class="address__action" @click="$emit('edit')">
+                <img loading="lazy" src="~/assets/icons/edit.svg" alt="edit" />
+                Edit address
+            </div>
         </div>
     </div>
 </template>
+
+<script setup lang="ts">
+import type { Address } from '~/app/api/locationApi';
+
+const props = defineProps<{
+    address: Address;
+}>();
+
+const emit = defineEmits(['delete', 'edit']);
+
+const formatAddress = computed(() => {
+    const parts = [];
+    if (props.address.street) parts.push(props.address.street);
+    if (props.address.house_number) parts.push(props.address.house_number);
+    if (props.address.city?.name) parts.push(props.address.city.name);
+    if (props.address.city?.country?.name) parts.push(props.address.city.country.name);
+    return parts.join(', ');
+});
+</script>
 
 <style lang="scss" scoped>
 .address {

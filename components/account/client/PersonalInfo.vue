@@ -3,12 +3,14 @@
         Personal Information
         <div class="personal__block">
             <BaseInput type="text-editable" v-model="name" @save="saveProfile" placeholder="Name" />
-            <div class="phone-input-wrapper">
-                <div class="phone-display">
-                    <img :src="`https://flagcdn.com/w20/ru.png`" alt="RU" class="flag" />
-                    <span>{{ formatPhoneNumber(user.profile?.phone_number) }}</span>
-                </div>
-            </div>
+            <PhoneInput 
+                :value="phoneNumber" 
+                :country-code="countryCode"
+                :phone-code="phoneCode"
+                :readonly="true"
+                placeholder="Phone number" 
+                :hint="'Registration phone number'"
+            />
             <BaseInput type="text-editable" v-model="surname" @save="saveProfile" placeholder="Surname" />
             <div class="city-input-wrapper">
                 <CityInput v-model:city="selectedCity" placeholder="City" @update:city="onCityChange" />
@@ -24,6 +26,7 @@ import { patchClient, type Profile } from '~/app/api/clientApi';
 import ChangePassword from '~/components/account/client/ChangePassword.vue';
 import BaseBlock from '~/components/UI/BaseBlock.vue';
 import BaseInput from '~/components/UI/BaseInput.vue';
+import PhoneInput from '~/components/UI/PhoneInput.vue';
 import CityInput from '~/components/orders/CityInput.vue';
 import type { City } from '~/stores/userStore';
 
@@ -33,19 +36,44 @@ const name = ref('');
 const surname = ref('');
 const selectedCity = ref<City | null>(null);
 const email = ref('');
-
-function formatPhoneNumber(phoneNumber?: string) {
-    if (!phoneNumber) return '';
-    return phoneNumber;
-}
+const phoneNumber = ref('');
+const countryCode = ref('RU');
+const phoneCode = ref('+7');
 
 onMounted(async () => {
     await user.checkAuth();
     if (user.profile) {
+        console.log('Profile data:', {
+            phone_number: user.profile.phone_number,
+            phone_code: user.profile.phone_code,
+            phone_country_code: user.profile.phone_country_code
+        });
+
         name.value = user.profile.first_name || '';
         surname.value = user.profile.last_name || '';
         selectedCity.value = typeof user.profile.city === 'string' ? null : user.profile.city;
         email.value = user.profile.email || '';
+        
+        // Используем данные из профиля
+        if (user.profile.phone_code) {
+            phoneCode.value = user.profile.phone_code; // Например, "+1"
+            countryCode.value = user.profile.phone_code === '+7' ? 'RU' : 'US';
+        }
+        
+        // Получаем номер телефона из phone_number
+        if (user.profile.phone_number) {
+            const match = user.profile.phone_number.match(/^\+(\d{1})(\d+)$/);
+            if (match) {
+                phoneNumber.value = match[2]; // Берем только номер без кода страны
+            }
+        }
+        
+        console.log('Processed phone data:', {
+            countryCode: countryCode.value,
+            phoneCode: phoneCode.value,
+            phoneNumber: phoneNumber.value,
+            originalPhoneNumber: user.profile.phone_number
+        });
     }
 });
 

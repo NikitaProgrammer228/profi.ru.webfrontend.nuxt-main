@@ -21,6 +21,8 @@ interface Profile {
     avatar: string;
     email: string;
     phone_number: string;
+    phone_code: string;
+    phone_country_code: string;
     created: string;
     modified: string;
 }
@@ -76,6 +78,8 @@ export const useUserStore = defineStore("user", () => {
         avatar: "",
         email: "",
         phone_number: "",
+        phone_code: "",
+        phone_country_code: "",
         created: "",
         modified: "",
     });
@@ -136,6 +140,8 @@ export const useUserStore = defineStore("user", () => {
                     avatar: client.avatar || "",
                     email: client.email || "",
                     phone_number: client.phone_number || "",
+                    phone_code: client.phone_code || "",
+                    phone_country_code: client.phone_country_code || "",
                     created: client.created || "",
                     modified: client.modified || ""
                 };
@@ -205,6 +211,8 @@ export const useUserStore = defineStore("user", () => {
             avatar: "",
             email: "",
             phone_number: "",
+            phone_code: "",
+            phone_country_code: "",
             created: "",
             modified: "",
         };

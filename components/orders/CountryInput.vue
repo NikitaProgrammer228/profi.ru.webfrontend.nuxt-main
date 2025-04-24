@@ -8,11 +8,23 @@
             <img loading="lazy" src="~/assets/icons/help.svg" alt="help" />
         </div>
         <div class="dropdown" v-if="opened">
-            <h3>Select city</h3>
-            <BaseInput type="search" v-model="search" placeholder="Search" style="margin-bottom: -10px;" @input="searchCities" />
+            <h3>Select location</h3>
+            <BaseInput type="search" v-model="search" placeholder="Search city or country" style="margin-bottom: -10px;" @input="searchLocations" />
             <div class="dropdown__items" v-memo="[search]">
-                <div class="dropdown__item" v-for="(item, i) in uniqueCities" :key="i" @click="selectCity(item)">
-                    <span>{{ item.address_dict.city }}</span>
+                <template v-if="uniqueCountries.length > 0">
+                    <div class="dropdown__section">Countries</div>
+                    <div class="dropdown__item" v-for="(item, i) in uniqueCountries" :key="'country-'+i" @click="selectCountry(item)">
+                        <span>{{ item.address_dict.country }}</span>
+                    </div>
+                </template>
+                <template v-if="uniqueCities.length > 0">
+                    <div class="dropdown__section">Cities</div>
+                    <div class="dropdown__item" v-for="(item, i) in uniqueCities" :key="'city-'+i" @click="selectCity(item)">
+                        <span>{{ item.address_dict.city }}, {{ item.address_dict.country }}</span>
+                    </div>
+                </template>
+                <div v-if="uniqueCountries.length === 0 && uniqueCities.length === 0" class="dropdown__empty">
+                    No results found
                 </div>
             </div>
         </div>
@@ -23,9 +35,8 @@
 
 <script setup lang="ts">
 import BaseInput from '../UI/BaseInput.vue';
-import { findCity, getOrCreateCity, type FindAddressModel } from '~/app/api/locationApi';
+import { findCity, type FindAddressModel } from '~/app/api/locationApi';
 import type { City } from '~/stores/userStore';
-import type { CityData } from '~/app/api/types';
 
 // Custom debounce function
 function debounce<T extends (...args: any[]) => any>(fn: T, delay: number) {
@@ -40,33 +51,28 @@ const props = defineProps<{
     placeholder?: string;
     type?: string;
     hint?: string;
-    city?: City | null;
+    country?: { id: number; name: string; } | null;
     error?: string;
 }>();
 
-const emit = defineEmits(['update:city', 'blur', 'focus', 'update:error']);
+const emit = defineEmits(['update:country', 'country-selected', 'blur', 'focus', 'update:error']);
 
 const opened = ref(false);
 const selectRef = ref(null);
 const search = ref('');
-const cities = ref<FindAddressModel[]>([]);
+const searchResults = ref<FindAddressModel[]>([]);
 const loading = ref(false);
 
 const displayValue = computed(() => {
-    if (!props.city) return props.placeholder || 'Select';
-    if (typeof props.city === 'string') return props.city;
-    if (props.city && 'name' in props.city) {
-        const cityObj = props.city as City;
-        return `${cityObj.name}${cityObj.country?.name ? `, ${cityObj.country.name}` : ''}`;
-    }
-    return props.placeholder || 'Select';
+    if (!props.country) return props.placeholder || 'Select location';
+    return props.country.name;
 });
 
-const uniqueCities = computed(() => {
+const uniqueCountries = computed(() => {
     const uniqueMap = new Map();
-    cities.value.forEach(item => {
-        if (!item?.address_dict) return;
-        const key = item.address_dict.city.toLowerCase();
+    searchResults.value.forEach(item => {
+        if (!item?.address_dict?.country) return;
+        const key = item.address_dict.country.toLowerCase();
         if (!uniqueMap.has(key)) {
             uniqueMap.set(key, item);
         }
@@ -74,9 +80,31 @@ const uniqueCities = computed(() => {
     return Array.from(uniqueMap.values());
 });
 
-async function searchCities() {
+const uniqueCities = computed(() => {
+    const uniqueMap = new Map();
+    searchResults.value.forEach(item => {
+        if (!item?.address_dict?.city || !item?.address_dict?.country) return;
+        
+        const cityName = item.address_dict.city.toLowerCase().trim();
+        // Исключаем области/регионы
+        if (cityName.includes('область') || 
+            cityName.includes('район') || 
+            cityName.includes('край') ||
+            cityName.includes('округ')) {
+            return;
+        }
+        
+        const key = `${cityName}-${item.address_dict.country.toLowerCase()}`;
+        if (!uniqueMap.has(key)) {
+            uniqueMap.set(key, item);
+        }
+    });
+    return Array.from(uniqueMap.values());
+});
+
+async function searchLocations() {
     if (!search.value || search.value.length < 1) {
-        cities.value = [];
+        searchResults.value = [];
         return;
     }
     
@@ -84,86 +112,74 @@ async function searchCities() {
     try {
         const results = await findCity(search.value);
         if (results && Array.isArray(results)) {
-            cities.value = results.filter(item => {
-                if (!item?.address_dict?.city) return false;
+            searchResults.value = results.filter(item => {
+                if (!item?.address_dict) return false;
                 
-                const cityName = item.address_dict.city.toLowerCase().trim();
+                const cityName = (item.address_dict.city || '').toLowerCase().trim();
                 const countryName = (item.address_dict.country || '').toLowerCase().trim();
-                
-                if (cityName.includes('область') || 
-                    cityName.includes('район') || 
-                    cityName.includes('край') ||
-                    cityName.includes('округ')) {
-                    return false;
-                }
-                
                 const searchTerms = search.value.toLowerCase().trim().split(/\s+/);
+                
                 return searchTerms.every(term => 
                     cityName.includes(term) || countryName.includes(term)
                 );
             });
 
-            cities.value.sort((a, b) => {
+            // Сортируем результаты
+            searchResults.value.sort((a, b) => {
                 const searchLower = search.value.toLowerCase().trim();
-                const cityA = a.address_dict.city.toLowerCase().trim();
-                const cityB = b.address_dict.city.toLowerCase().trim();
+                const countryA = a.address_dict.country.toLowerCase().trim();
+                const countryB = b.address_dict.country.toLowerCase().trim();
+                const cityA = (a.address_dict.city || '').toLowerCase().trim();
+                const cityB = (b.address_dict.city || '').toLowerCase().trim();
                 
+                // Приоритет точных совпадений
+                if (countryA === searchLower && countryB !== searchLower) return -1;
+                if (countryB === searchLower && countryA !== searchLower) return 1;
                 if (cityA === searchLower && cityB !== searchLower) return -1;
                 if (cityB === searchLower && cityA !== searchLower) return 1;
                 
-                if (cityA.startsWith(searchLower) && !cityB.startsWith(searchLower)) return -1;
-                if (cityB.startsWith(searchLower) && !cityA.startsWith(searchLower)) return 1;
-                
-                if (cityA.length !== cityB.length) {
-                    return cityA.length - cityB.length;
-                }
-                
-                return cityA.localeCompare(cityB);
+                return countryA.localeCompare(countryB) || cityA.localeCompare(cityB);
             });
         } else {
-            cities.value = [];
+            searchResults.value = [];
         }
     } catch (error) {
-        console.error('Error searching cities:', error);
-        cities.value = [];
+        console.error('Error searching locations:', error);
+        searchResults.value = [];
     } finally {
         loading.value = false;
     }
 }
 
-async function selectCity(city: FindAddressModel) {
-    if (!city?.address_dict?.city) return;
+function selectCountry(country: FindAddressModel) {
+    if (!country?.address_dict?.country) return;
     
-    try {
-        // Сначала получаем или создаем город в базе
-        const cityData = await getOrCreateCity(
-            city.address_dict.city,
-            city.address_dict.country || ''
-        );
-        
-        if (!cityData) {
-            console.error('Failed to get or create city');
-            return;
-        }
-
-        const selectedCity: CityData = {
-            id: cityData.id,
-            name: cityData.name,
-            country: {
-                id: cityData.country.id,
-                name: cityData.country.name
-            }
-        };
-        
-        emit('update:city', selectedCity);
-        search.value = '';
-        opened.value = false;
-    } catch (error) {
-        console.error('Error selecting city:', error);
-    }
+    const selectedCountry = {
+        id: country.country_id || 0,
+        name: country.address_dict.country
+    };
+    
+    emit('update:country', selectedCountry);
+    emit('country-selected', selectedCountry);
+    search.value = '';
+    opened.value = false;
 }
 
-const debouncedSearch = debounce(searchCities, 300);
+function selectCity(city: FindAddressModel) {
+    if (!city?.address_dict?.city || !city?.address_dict?.country) return;
+    
+    const selectedCountry = {
+        id: city.country_id || 0,
+        name: city.address_dict.country
+    };
+    
+    emit('update:country', selectedCountry);
+    emit('country-selected', selectedCountry);
+    search.value = '';
+    opened.value = false;
+}
+
+const debouncedSearch = debounce(searchLocations, 300);
 
 watch(search, () => {
     debouncedSearch();
@@ -278,4 +294,4 @@ useClickOutside(selectRef, () => opened.value = false);
     margin-top: 4px;
     display: block;
 }
-</style>
+</style> 

@@ -1,5 +1,11 @@
 <template>
     <BaseBlock class="order" :center="false">
+        <!-- 1. Изображения, прикреплённые к заказу -->
+        <div v-if="order.images && order.images.length" class="order__images">
+            <div class="order__image" v-for="(img, idx) in order.images" :key="idx">
+                <img loading="lazy" :src="getImageUrl(img)" alt="Attached Image" />
+            </div>
+        </div>
         <div class="order__title">
             <div class="title">
                 <h3>{{ order.title }}</h3>
@@ -27,7 +33,14 @@
             </div>
             <div class="info">
                 <img loading="lazy" src="~/assets/icons/location.svg" alt="location" />
-                {{ formatAddress(order) }}
+                {{ [
+                    order.address.country,
+                    order.address.city?.name,
+                    order.address.street,
+                    order.address.house_number && `house ${order.address.house_number}`,
+                    order.address.apartment_number && `apt ${order.address.apartment_number}`,
+                    order.address.postal_code && `postal ${order.address.postal_code}`
+                ].filter(Boolean).join(', ') }}
             </div>
             <div class="info">
                 <img loading="lazy" src="~/assets/icons/price.svg" alt="price" />
@@ -80,6 +93,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '~/app/api';
 import type { PropType } from 'vue';
 import Avatar from '../shared/Avatar.vue';
 import BaseBlock from '../UI/BaseBlock.vue';
@@ -103,26 +117,34 @@ const props = defineProps({
 
 defineEmits(['chat', 'cancel']);
 
-const status = useParseStatus(props.order.status);
-const created = useParseTime(props.order.created);
-const deadline = useParseDeadline(props.order.deadline);
-const priceType = useParsePriceType(props.order.type_price);
+const status = useParseStatus(props.order.status as any);
+const created = useParseTime(props.order.created || '');
+const deadline = useParseDeadline(props.order.deadline || '');
+const priceType = useParsePriceType(props.order.type_price as any);
 
-function formatAddress(order: Order): string {
-    const parts = [];
-    
-    // Проверяем и используем поле city из заказа
-    if (order.city && typeof order.city === 'object') {
-        const cityObj = order.city as unknown as { name: string; country?: { name: string } };
-        if (cityObj.country?.name) {
-            parts.push(cityObj.country.name);
-        }
-        if (cityObj.name) {
-            parts.push(cityObj.name);
-        }
-    }
-    
+function formatAddress(order: any): string {
+    const addr = order.address;
+    if (!addr) return 'No location';
+    const parts: string[] = [];
+    // Country
+    if (addr.country) parts.push(addr.country);
+    // City
+    if (addr.city && 'name' in addr.city && addr.city.name) parts.push(addr.city.name);
+    // Street and house number
+    if (addr.street) parts.push(addr.street);
+    if (addr.house_number) parts.push(`house ${addr.house_number}`);
+    // Apartment number and postal code
+    if (addr.apartment_number) parts.push(`apt ${addr.apartment_number}`);
+    if (addr.postal_code) parts.push(`postal ${addr.postal_code}`);
     return parts.join(', ') || 'No location';
+}
+
+// Helper to build full image URLs
+function getImageUrl(path: string): string {
+    if (path.startsWith('http')) return path;
+    // Ensure leading slash
+    const prefix = api.defaults.baseURL || '';
+    return `${prefix}${path.startsWith('/') ? '' : '/'}${path}`;
 }
 </script>
 

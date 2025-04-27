@@ -11,32 +11,45 @@ export interface Reason {
 }
 
 export interface Order {
-    description: string;
+    id: string;
     title: string;
-    price: number;
+    description: string;
+    price: number | string;
+    type_price: TypePrice;
     at_home_client: boolean;
-    city: string;
-    client: string;
-    master: Master;
-    created: string;
-    modified: string;
+    remotely: boolean;
+    address: {
+        id?: number;
+        city?: { id: number; name: string; country: { id: number; name: string } };
+        country?: string;
+        street?: string;
+        house_number?: string;
+        apartment_number?: string;
+        postal_code?: string;
+    };
+    city?: { id: number; name: string; country: { id: number; name: string } };
     subcategory: {
         id: string;
         name: string;
-        category: {
-            id: string;
-            name: string;
-        };
+        category: { id: string; name: string };
     };
-    address: string;
+    client: { id: string };
+    master?: {
+        avatar: { image: string | null };
+        first_name: string;
+        last_name: string;
+    };
+    currency: { id: number; fullname: string; code: string; symbol: string };
+    for_all: boolean;
+    created: string;
+    modified: string;
     archived: boolean;
-    deadline: string;
-    id: string;
     images: string[];
-    reason_cancel: string | null;
+    deadline: string | null;
     responses_count: number;
-    status: Status;
-    type_price: TypePrice;
+    status: string;
+    reason_cancel: any;
+    has_chat?: boolean;
 }
 
 export interface OrderResponse {
@@ -61,9 +74,17 @@ export async function getOrders(): Promise<Order[]> {
 
 // post:
 //   operationId: orders_create
-export async function postOrder(order: Order): Promise<Order> {
-    const res = await api.post("/api/v1/orders", order);
-
+export async function postOrder(formData: FormData): Promise<string> {
+    const res = await api.request({
+        url: "/api/v1/orders",
+        method: 'POST',
+        data: formData,
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        },
+        // Prevent axios from serializing FormData to JSON
+        transformRequest: [(data) => data]
+    });
     return res.data;
 }
 

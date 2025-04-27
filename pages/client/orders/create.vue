@@ -32,9 +32,14 @@
         </div>
       </div>
       <div class="form-data">
-        <DateSelect placeholder="Deadline"></DateSelect>
+        <DateSelect v-model="response.date" placeholder="Deadline"></DateSelect>
         <div class="files">
-          <input type="file" accept="image/*" multiple @change="onFileChange" />
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            @change="handleFileChange"
+          />
           <span>Files</span>
           <img loading="lazy" src="~/assets/icons/file.svg" alt="file">
         </div>
@@ -72,6 +77,7 @@
 import type { Category } from '~/app/api/categoryApi';
 import { getOrder, postOrder, type Order } from '~/app/api/orderApi';
 import { getUserAddresses, type FindAddressModel } from '~/app/api/locationApi';
+import { uploadImage } from '~/app/api/photoApi';
 import AddressInput from '~/components/orders/AddressInput.vue';
 import PriceInput from '~/components/orders/PriceInput.vue';
 import BackButton from '~/components/UI/BackButton.vue';
@@ -93,6 +99,73 @@ const catalog = useCatalogStore();
 const user = useUserStore();
 
 const selectedAddress = ref<FindAddressModel | null>(null);
+const categoryId = ref('');
+const subcategory = ref();
+const orderCreated = ref(false);
+const error = ref('');
+
+interface OrderAddress {
+  country?: string;
+  city?: string;
+  street?: string;
+  house_number?: string;
+  apartment_number?: string;
+  postal_code?: string;
+  entrance?: string;
+  floor?: string;
+  intercom?: string;
+}
+
+interface OrderData {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  type_price: string;
+  at_home_client: boolean;
+  remotely: boolean;
+  images: File[];
+  address: OrderAddress;
+  subcategory: string;
+  client: string;
+  currency: number;
+  for_all: boolean;
+  city?: string;
+}
+
+interface ResponseData {
+  currency: number;
+  images: string[];
+  place: boolean;
+  time: string;
+  date: string;
+}
+
+const response = ref<ResponseData>({
+  currency: 1,
+  images: [],
+  place: false,
+  time: '',
+  date: ''
+});
+
+const refferenceOrder = ref<Order | null>(null);
+const order = ref<OrderData>({
+  id: '',
+  title: '',
+  description: '',
+  price: 0,
+  type_price: '',
+  at_home_client: false,
+  remotely: false,
+  images: [],
+  address: {},
+  subcategory: '',
+  client: '',
+  currency: 1,
+  for_all: false,
+  city: ''
+});
 
 const categories = computed(() => {
   if (catalog.subcategories.subcategories.length) {
@@ -100,32 +173,6 @@ const categories = computed(() => {
   }
   return catalog.categories;
 });
-const categoryId = ref('');
-const subcategory = ref();
-
-const response = reactive({
-  currency: null,
-  images: [] as File[],
-  place: '',
-  time: '',
-});
-const refferenceOrder = ref<Order | null>(null);
-const order = ref({
-  title: '',
-  description: '',
-  type_price: '',
-  price: null,
-  city: '',
-  at_home_client: false,
-  client: user.profile.id,
-  subcategory: '',
-  remotely: false,
-  address: '',
-  currency: null
-});
-
-const orderCreated = ref(false);
-const error = ref('');
 
 const valid = computed(() => {
   return order.value.title && 
@@ -136,33 +183,56 @@ const valid = computed(() => {
          order.value.subcategory;
 });
 
-async function createOrder() {
+const currency = computed(() => response.value.currency);
+
+const createOrder = async () => {
   try {
-    error.value = '';  // Clear any previous errors
-    // Update at_home_client based on selected place
-    order.value.at_home_client = response.place === 'true';
-    
-    // If order is not remote and at client's home, address is required
-    if (!order.value.remotely && order.value.at_home_client) {
-      const addresses = await getUserAddresses(user.profile.id);
-      if (addresses && addresses.length > 0) {
-        order.value.address = addresses[0].id.toString();
-      } else {
-        error.value = 'Please add an address in your profile settings before creating an order at your home.';
-        throw new Error(error.value);
+    const formData = new FormData();
+
+    // 1. Только если есть файлы — добавляем images
+    if (order.value.images.length > 0) {
+      for (const file of order.value.images) {
+        formData.append('images', file);
       }
     }
-    
-    await postOrder(order.value);
-    orderCreated.value = true;
-  } catch (error) {
-    console.error('Error creating order:', error);
-    if (!error.value) {  // Only set generic error if no specific error is set
-      error.value = 'Failed to create order. Please try again.';
+
+    // 2. Остальные поля
+    formData.append('for_all', order.value.for_all.toString());
+    formData.append('at_home_client', response.value.place.toString());
+    formData.append('remotely', order.value.remotely.toString());
+    formData.append('title', order.value.title);
+    formData.append('description', order.value.description);
+    formData.append('subcategory', order.value.subcategory);
+    formData.append('type_price', order.value.type_price);
+    formData.append('price', order.value.price.toString());
+    formData.append('currency', order.value.currency.toString());
+
+    if (response.value.date) {
+      formData.append('deadline', response.value.date);
     }
-    throw error;
+
+    // 4. Адрес: если пользователь выбрал «On my place» и адрес заполнен
+    if (response.value.place && selectedAddress.value) {
+      formData.append('address', JSON.stringify({
+        country: selectedAddress.value.address_dict.country,
+        city: selectedAddress.value.address_dict.city,
+        street: selectedAddress.value.address_dict.street,
+        house_number: selectedAddress.value.address_dict.house_number,
+        apartment_number: selectedAddress.value.apartment_number,
+        postal_code: selectedAddress.value.postal_code,
+      }));
+    } else {
+      // на случай, если адрес не выбран или пользователь не хочет вводить адрес
+      formData.append('address', JSON.stringify({}));
+    }
+
+    await postOrder(formData);
+    orderCreated.value = true;
+  } catch (error: any) {
+    error.value = 'Ошибка при создании заказа. Попробуйте ещё раз.';
+    console.error(error);
   }
-}
+};
 
 function selectCategory(category: Category) {
   if (!categoryId.value.length) {
@@ -174,32 +244,35 @@ function selectCategory(category: Category) {
     order.value.subcategory = category.id;
     isCategorySelect.value = false;
   }
-
 }
 
-function onFileChange(event: { target: { files: any; }; }) {
-  const files = event.target.files;
-  console.log(files, 'files');
-  const newImages: File[] = [];
+const handleFileChange = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  if (target.files) {
+    const files = Array.from(target.files);
 
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i];
+    // Для отправки на сервер — только файлы!
+    order.value.images = files;
 
-    if (file && file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        newImages.push(e.target.result);
-        if (newImages.length === files.length) {
-          response.images = [...response.images, ...newImages];
-        }
-      };
-      reader.readAsDataURL(file);
-    }
+    // Для предпросмотра — base64
+    response.value.images = [];
+    files.forEach((file) => {
+      if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          if (e.target?.result) {
+            response.value.images.push(e.target.result as string);
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    });
   }
 };
 
 function deleteFile(index: number) {
-  response.images.splice(index, 1);
+  response.value.images.splice(index, 1);
+  order.value.images.splice(index, 1);
 }
 
 watch(() => categoryId.value, async () => {
@@ -216,7 +289,7 @@ watch(selectedAddress, (newAddress) => {
 });
 
 // Watch for currency changes
-watch(() => response.currency, (newCurrency) => {
+watch(() => response.value.currency, (newCurrency) => {
   if (newCurrency !== null) {
     order.value.currency = newCurrency;
   }

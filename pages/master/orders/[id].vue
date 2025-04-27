@@ -85,12 +85,22 @@ const order = ref<any>(null);
 const isResponded = ref(false);
 const type = ref<any>('viewed');
 
-const response = reactive({
+// Add ResponseData interface for typed response object
+interface ResponseData {
+    currency: 'USD' | 'EUR' | 'RUB';
+    type_price: string;
+    price_offer: string;
+    message: string;
+    images: string[];
+}
+
+// Type the response reactive object
+const response = reactive<ResponseData>({
     currency: 'USD',
     type_price: '',
     price_offer: '',
     message: '',
-    images: [] as File[],
+    images: [],
 });
 
 const values = ref({
@@ -117,29 +127,33 @@ const isValid = computed(() => {
 });
 
 function changeValue(value: string) {
-    response.currency = value;
+    response.currency = value as ResponseData['currency'];
 }
 
-function onFileChange(event: { target: { files: any; }; }) {
-    const files = event.target.files;
+function onFileChange(event: Event) {
+    const target = event.target as HTMLInputElement;
+    const files = target.files;
+    if (!files) return;
     console.log(files, 'files');
-    const newImages: File[] = [];
+    const newImages: string[] = [];
 
     for (let i = 0; i < files.length; i++) {
         const file = files[i];
-
         if (file && file.type.startsWith('image/')) {
             const reader = new FileReader();
-            reader.onload = (e) => {
-                newImages.push(e.target.result);
-                if (newImages.length === files.length) {
-                    response.images = [...response.images, ...newImages];
+            reader.onload = (e: ProgressEvent<FileReader>) => {
+                const result = e.target?.result;
+                if (typeof result === 'string') {
+                    newImages.push(result);
+                    if (newImages.length === files.length) {
+                        response.images = [...response.images, ...newImages];
+                    }
                 }
             };
             reader.readAsDataURL(file);
         }
     }
-};
+}
 
 function deleteFile(index: number) {
     response.images.splice(index, 1);

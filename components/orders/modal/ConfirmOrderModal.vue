@@ -18,7 +18,7 @@ defineProps({
 defineEmits(['cancel', 'select']);
 
 const response = ref({
-    currency: 'USD',
+    currency: 1,
     type: '',
     price: '',
     type_price: '',

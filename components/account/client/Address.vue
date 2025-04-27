@@ -6,13 +6,13 @@
         </div>
         <div class="address__actions">
             <div class="address__action" @click="$emit('delete')">
-                <img loading="lazy" src="~/assets/icons/cross.svg" alt="delete" />
+                    <img loading="lazy" src="~/assets/icons/cross.svg" alt="delete" />
                 delete_address
-            </div>
+                </div>
             <div class="address__action" @click="$emit('edit')">
                 <img loading="lazy" src="~/assets/icons/edit.svg" alt="edit" />
                 Edit Addresses
-            </div>
+                </div>
         </div>
     </div>
 </template>
@@ -78,26 +78,26 @@ const formatAddress = computed(() => {
     }
 
     .address__actions {
-        width: -webkit-fill-available;
-        width: -moz-available;
-        display: flex;
-        justify-content: space-between;
+            width: -webkit-fill-available;
+            width: -moz-available;
+            display: flex;
+            justify-content: space-between;
         margin-top: 8px;
 
-        .address__action {
-            display: flex;
-            flex-direction: row;
-            gap: 4px;
-            align-items: center;
+            .address__action {
+                display: flex;
+                flex-direction: row;
+                gap: 4px;
+                align-items: center;
 
-            font-size: 12px;
-            font-weight: 500;
-            line-height: 14.4px;
-            letter-spacing: -0.02em;
-            color: rgba(156, 156, 156, 1);
+                font-size: 12px;
+                font-weight: 500;
+                line-height: 14.4px;
+                letter-spacing: -0.02em;
+                color: rgba(156, 156, 156, 1);
 
-            cursor: pointer;
-            user-select: none;
+                cursor: pointer;
+                user-select: none;
 
             &:hover {
                 color: #1C1C1C;
@@ -107,7 +107,7 @@ const formatAddress = computed(() => {
                 width: 16px;
                 height: 16px;
             }
+            }
         }
-    }
 }
 </style>

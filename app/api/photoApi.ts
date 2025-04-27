@@ -6,6 +6,11 @@ interface Image {
     image: string;
 }
 
+interface UploadedImage {
+    id: string;
+    url: string;
+}
+
 // /image:
 // get:
 //   operationId: image_list
@@ -30,11 +35,14 @@ export async function postImage(data: FormData): Promise<Image> {
     return res.data;
 }
 
-export async function uploadImage(data: FormData): Promise<Image[]> {
-    const res = await api.post("/api/v1/image/upload", data, { headers: { "Content-Type": "multipart/form-data" } });
-
-    return res.data;
-}
+export const uploadImage = async (formData: FormData): Promise<UploadedImage> => {
+    const response = await api.post('/api/v1/image/upload', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+    return response.data;
+};
 
 // post:
 //   operationId: image_create

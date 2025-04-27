@@ -156,11 +156,11 @@ async function selectCity(city: FindAddressModel) {
         };
         
         emit('update:city', selectedCity);
-        search.value = '';
-        opened.value = false;
+    search.value = '';
+    opened.value = false;
     } catch (error) {
         console.error('Error selecting city:', error);
-    }
+}
 }
 
 const debouncedSearch = debounce(searchCities, 300);
@@ -252,7 +252,7 @@ useClickOutside(selectRef, () => opened.value = false);
     background: white;
     border: 1px solid #9C9C9C;
     border-radius: 6px;
-    font-size: 16px;
+            font-size: 16px;
     line-height: 1.5;
     color: #000;
     height: 48px;

@@ -65,8 +65,8 @@ onMounted(async () => {
             const match = user.profile.phone_number.match(/^\+(\d{1})(\d+)$/);
             if (match) {
                 phoneNumber.value = match[2]; // Берем только номер без кода страны
-            }
         }
+    }
         
         console.log('Processed phone data:', {
             countryCode: countryCode.value,
@@ -95,9 +95,9 @@ async function saveProfile() {
     };
 
     try {
-        const res = await patchClient(profile as unknown as Profile, user.profile.id);
+    const res = await patchClient(profile as unknown as Profile, user.profile.id);
         if (res) {
-            user.profile = res as unknown as typeof user.profile;
+    user.profile = res as unknown as typeof user.profile;
             selectedCity.value = typeof res.city === 'string' ? null : res.city as City;
         }
     } catch (error) {

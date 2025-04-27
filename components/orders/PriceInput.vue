@@ -52,7 +52,7 @@ onMounted(async () => {
         // If no currency is selected, set the first one (usually USD) as default
         if (!props.response.currency && currencies.value.length > 0) {
             props.response.currency = currencies.value[0].id;
-        }
+}
     } catch (error) {
         console.error('Failed to load currencies:', error);
     }

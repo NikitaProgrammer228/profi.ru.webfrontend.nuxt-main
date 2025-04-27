@@ -28,7 +28,16 @@
             </div>
             <div class="info">
                 <img loading="lazy" src="~/assets/icons/location.svg" alt="location" />
-                {{ formatAddress(order) }}
+                {{
+                    [
+                        order.address.country,
+                        order.address.city?.name,
+                        order.address.street,
+                        `house ${order.address.house_number}`,
+                        order.address.apartment_number ? `apt ${order.address.apartment_number}` : '',
+                        order.address.postal_code ? `postal ${order.address.postal_code}` : ''
+                    ].filter(Boolean).join(', ')
+                }}
             </div>
             <div class="info">
                 <img loading="lazy" src="~/assets/icons/price.svg" alt="price" />
@@ -45,16 +54,12 @@
 import type { PropType } from 'vue';
 import BaseBlock from '../UI/BaseBlock.vue';
 import BaseButton from '../UI/BaseButton.vue';
-import { type Order, orderGetResponses, orderGetRecommendedMasters, getOrder } from '~/app/api/orderApi';
+import { orderGetResponses, orderGetRecommendedMasters, getOrder } from '~/app/api/orderApi';
 import { type City, type Address } from '~/app/api/locationApi';
 import { useOrderStore } from '~/stores/orderStore';
 
-const props = defineProps({
-    order: {
-        type: Object as PropType<Order>,
-        required: true
-    }
-});
+const props = defineProps<{ order: any }>();
+const recommendedMasters = ref<any[]>([]);
 
 const router = useRouter();
 const orderStore = useOrderStore();
@@ -64,33 +69,30 @@ const created = useParseTime(props.order.created);
 const deadline = useParseDeadline(props.order.deadline);
 const priceType = useParsePriceType(props.order.type_price);
 
-function formatAddress(order: Order): string {
-    const parts = [];
-    
-    // Проверяем и используем поле city из заказа
-    if (order.city && typeof order.city === 'object') {
-        const cityObj = order.city as unknown as { name: string; country?: { name: string } };
-        if (cityObj.country?.name) {
-            parts.push(cityObj.country.name);
-        }
-        if (cityObj.name) {
-            parts.push(cityObj.name);
-        }
-    }
-    
+function formatAddress(order: any): string {
+    const addr = order.address;
+    if (!addr) return 'No location';
+    const parts: string[] = [];
+    // Country and city
+    if (addr.country) parts.push(addr.country);
+    if (addr.city && 'name' in addr.city && addr.city.name) parts.push(addr.city.name);
+    // Street and house number
+    if (addr.street) parts.push(addr.street);
+    if (addr.house_number) parts.push(`house ${addr.house_number}`);
+    // Apartment number and postal code
+    if (addr.apartment_number) parts.push(`apt ${addr.apartment_number}`);
+    if (addr.postal_code) parts.push(`postal ${addr.postal_code}`);
     return parts.join(', ') || 'No location';
 }
 
-async function redirect(order: Order) {
+async function redirect(order: any) {
     orderStore.currentOrder = order;
     orderStore.orderResponses = await orderGetResponses(order.id);
-    orderStore.recommendedMasters = await orderGetRecommendedMasters(order.subcategory.id);
-
+    recommendedMasters.value = await orderGetRecommendedMasters(order.subcategory.id);
     router.push(`/client/orders/${order.id}`);
 }
 
 async function repeatOrder(id: string) {
-    orderStore.repeatOrder = await getOrder(id);
     router.push('/client/orders/create?order=' + id);
 }
 </script>

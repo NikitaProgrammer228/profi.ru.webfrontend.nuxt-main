@@ -30,10 +30,10 @@
                 <img loading="lazy" src="~/assets/icons/location.svg" alt="location" />
                 {{
                     [
-                        order.address.country,
+                        order.address.country || order.address.city?.country.name,
                         order.address.city?.name,
                         order.address.street,
-                        `house ${order.address.house_number}`,
+                        order.address.house_number ? `house ${order.address.house_number}` : '',
                         order.address.apartment_number ? `apt ${order.address.apartment_number}` : '',
                         order.address.postal_code ? `postal ${order.address.postal_code}` : ''
                     ].filter(Boolean).join(', ')

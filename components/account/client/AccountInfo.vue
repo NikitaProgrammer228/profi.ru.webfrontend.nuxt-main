@@ -16,9 +16,10 @@
                 <EmailConfirmed :confirmed="profile?.email?.length > 0" />
             </div>
             <div class="avatar__actions">
-                <div class="avatar__action">
+                <div class="avatar__action" @click="deleteAvatar">
                     <img loading="lazy" src="~/assets/icons/cross.svg" alt="delete" />
-                    Delete photo
+                    <span v-if="!deletingAvatar">Delete photo</span>
+                    <span v-else>Deleting...</span>
                 </div>
                 <div class="avatar__action" @click="triggerFileInput">
                     <img loading="lazy" src="~/assets/icons/edit.svg" alt="edit" /> Edit photo
@@ -35,7 +36,7 @@ import BaseBlock from '~/components/UI/BaseBlock.vue';
 import EmailConfirmed from '~/components/account/client/EmailConfirmed.vue';
 import { useUserStore } from '~/stores/userStore';
 import { patchClient } from '~/app/api/clientApi';
-import { uploadImage } from '~/app/api/photoApi';
+import { uploadImage, deleteImage } from '~/app/api/photoApi';
 
 const props = defineProps({
     user: {
@@ -51,6 +52,11 @@ const props = defineProps({
 const userStore = useUserStore();
 const profile = ref(userStore.profile);
 const loadingUpload = ref(false);
+// Store current avatar resource ID for deletion
+const avatarId = ref<string | null>(null);
+// Deleting state
+const deletingAvatar = ref(false);
+
 // Reference to the hidden file input element
 const fileInput = ref<HTMLInputElement | null>(null);
 
@@ -68,6 +74,8 @@ async function onFileChange(event: Event) {
         const { id: imageId, image: imageUrl } = await uploadImage(file);
         // Patch avatar id
         await patchClient({ avatar: imageId }, profile.value.id);
+        // Save current avatar resource ID
+        avatarId.value = imageId;
         // Update store with new avatar URL
         userStore.profile.avatar = imageUrl;
         profile.value.avatar = imageUrl;
@@ -76,6 +84,25 @@ async function onFileChange(event: Event) {
         console.error('Avatar upload failed', err);
     } finally {
         loadingUpload.value = false;
+    }
+}
+
+// Delete avatar: clear on server and in local state
+async function deleteAvatar() {
+    if (!avatarId.value) return;
+    deletingAvatar.value = true;
+    try {
+        // Delete the image resource on server
+        await deleteImage(avatarId.value);
+        // Update local store and UI
+        userStore.profile.avatar = '';
+        profile.value.avatar = '';
+        localStorage.removeItem('profiru-avatar');
+        avatarId.value = null;
+    } catch (err) {
+        console.error('Avatar deletion failed', err);
+    } finally {
+        deletingAvatar.value = false;
     }
 }
 

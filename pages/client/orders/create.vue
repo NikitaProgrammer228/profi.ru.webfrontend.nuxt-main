@@ -28,7 +28,7 @@
           <div class="delete" @click="deleteFile(index)">
             <img loading="lazy" src="~/assets/icons/delete.svg" alt="delete" />
           </div>
-          <img loading="lazy" :src="image" alt="Uploaded Image" />
+          <img loading="lazy" :src="getImageUrl(image)" alt="Uploaded Image" />
         </div>
       </div>
       <div class="form-data">
@@ -45,7 +45,9 @@
         </div>
         <BaseSelect :list="[{ title: 'At master', value: false, }, { title: 'On my place', value: true, }]"
           v-model:selected="response.place" placeholder="Place" style="max-width: 100% !important;"></BaseSelect>
-        <BaseButton type="base" @click="createOrder" :disabled="!valid">Post an order</BaseButton>
+        <BaseButton type="base" @click="createOrder" :disabled="!valid">
+          {{ isEdit ? 'Save changes' : 'Post an order' }}
+        </BaseButton>
       </div>
     </div>
   </BaseBlock>
@@ -75,7 +77,7 @@
 
 <script setup lang="ts">
 import type { Category } from '~/app/api/categoryApi';
-import { getOrder, postOrder, type Order } from '~/app/api/orderApi';
+import { getOrder, postOrder, updateOrder, type Order } from '~/app/api/orderApi';
 import { getUserAddresses, type FindAddressModel } from '~/app/api/locationApi';
 import { uploadImage } from '~/app/api/photoApi';
 import AddressInput from '~/components/orders/AddressInput.vue';
@@ -88,12 +90,15 @@ import BaseModal from '~/components/UI/BaseModal.vue';
 import BaseSelect from '~/components/UI/BaseSelect.vue';
 import BaseTextarea from '~/components/UI/BaseTextarea.vue';
 import DateSelect from '~/components/UI/DateSelect.vue';
+import { useRouter } from 'vue-router';
+import { api } from '~/app/api';
 
 definePageMeta({
   middleware: ['auth'],
 });
 
 const route = useRoute();
+const router = useRouter();
 const isCategorySelect = ref(false);
 const catalog = useCatalogStore();
 const user = useUserStore();
@@ -167,6 +172,8 @@ const order = ref<OrderData>({
   city: ''
 });
 
+const isEdit = computed(() => Boolean(route.query.order));
+
 const categories = computed(() => {
   if (catalog.subcategories.subcategories.length) {
     return catalog.subcategories.subcategories;
@@ -211,7 +218,7 @@ const createOrder = async () => {
       formData.append('deadline', response.value.date);
     }
 
-    // 4. Адрес: если пользователь выбрал «On my place» и адрес заполнен
+    // 4. Адрес: всегда отправляем данные адреса, чтобы сервер не сбрасывал поля
     if (response.value.place && selectedAddress.value) {
       formData.append('address', JSON.stringify({
         country: selectedAddress.value.address_dict.country,
@@ -222,12 +229,17 @@ const createOrder = async () => {
         postal_code: selectedAddress.value.postal_code,
       }));
     } else {
-      // на случай, если адрес не выбран или пользователь не хочет вводить адрес
+      // отправляем пустой объект, если адрес не указан
       formData.append('address', JSON.stringify({}));
     }
 
-    await postOrder(formData);
-    orderCreated.value = true;
+    if (isEdit.value && refferenceOrder.value) {
+      await updateOrder(refferenceOrder.value.id, formData);
+      router.push('/client/orders/my');
+    } else {
+      await postOrder(formData);
+      orderCreated.value = true;
+    }
   } catch (error: any) {
     error.value = 'Ошибка при создании заказа. Попробуйте ещё раз.';
     console.error(error);
@@ -247,27 +259,27 @@ function selectCategory(category: Category) {
 }
 
 const handleFileChange = (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  if (target.files) {
-    const files = Array.from(target.files);
+  const input = event.target as HTMLInputElement;
+  if (!input.files || input.files.length === 0) return;
+  // Convert FileList to Array
+  const newFiles = Array.from(input.files);
+  // Append new files to existing ones
+  order.value.images = [...order.value.images, ...newFiles];
 
-    // Для отправки на сервер — только файлы!
-    order.value.images = files;
-
-    // Для предпросмотра — base64
-    response.value.images = [];
-    files.forEach((file) => {
-      if (file && file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          if (e.target?.result) {
-            response.value.images.push(e.target.result as string);
-          }
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-  }
+  // Append previews: keep existing previews (e.g. remote URLs) and add new base64
+  newFiles.forEach((file) => {
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          response.value.images.push(e.target.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+  // Reset input to allow selecting same file again
+  input.value = '';
 };
 
 function deleteFile(index: number) {
@@ -299,11 +311,65 @@ onMounted(async () => {
   catalog.subcategories.subcategories = [];
   await catalog.getAllCategories();
 
-  if (route.query.order) {
-    refferenceOrder.value = await getOrder(route.query.order as string);
+  if (isEdit.value && route.query.order) {
+    const id = route.query.order as string;
+    const existing = await getOrder(id);
+    refferenceOrder.value = existing;
+    // Prefill form fields
+    order.value = {
+      id: existing.id,
+      title: existing.title,
+      description: existing.description,
+      price: Number(existing.price),
+      type_price: existing.type_price,
+      at_home_client: existing.at_home_client,
+      remotely: existing.remotely,
+      images: [],
+      address: {
+        country: existing.address.country || '',
+        city: typeof existing.address.city === 'object' ? existing.address.city.name : existing.address.city || '',
+        street: existing.address.street || '',
+        house_number: existing.address.house_number || '',
+        apartment_number: existing.address.apartment_number || '',
+        postal_code: existing.address.postal_code || ''
+      },
+      subcategory: existing.subcategory.id,
+      client: existing.client.id,
+      currency: existing.currency.id,
+      for_all: existing.for_all,
+      city: existing.city?.name || ''
+    };
+    subcategory.value = existing.subcategory.name;
+    response.value.images = existing.images;
+    response.value.currency = existing.currency.id;
+    response.value.place = existing.at_home_client;
+    response.value.date = existing.deadline || '';
+    // Prefill address input: use server-provided region/state if available, else fallback to city-country
+    selectedAddress.value = {
+      id: existing.address.id,
+      address_dict: {
+        country: existing.address.country || existing.address.city?.country.name || '',
+        city: existing.address.city?.name ?? '',
+        street: existing.address.street ?? '',
+        house_number: existing.address.house_number ?? ''
+      },
+      apartment_number: existing.address.apartment_number ?? '',
+      postal_code: existing.address.postal_code ?? '',
+      formatted_address: ''
+    } as FindAddressModel;
   }
-  console.log(refferenceOrder);
 });
+
+/**
+ * Build full URL for image preview.
+ * If path is relative, prefix with baseURL.
+ */
+function getImageUrl(path: string): string {
+  // Return full HTTP URLs and data URLs unchanged
+  if (path.startsWith('http') || path.startsWith('data:')) return path;
+  const base = api.defaults.baseURL || '';
+  return `${base}${path.startsWith('/') ? '' : '/'}${path}`;
+}
 </script>
 
 <style lang="scss" scoped>

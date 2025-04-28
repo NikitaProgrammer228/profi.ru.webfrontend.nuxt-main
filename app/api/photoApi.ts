@@ -57,6 +57,14 @@ export async function uploadImage(file: File): Promise<UploadedImage> {
     return response.data;
 }
 
+/**
+ * Delete an uploaded image by its ID.
+ * @param id The image resource UUID to delete.
+ */
+export async function deleteImage(id: string): Promise<void> {
+    await api.delete(`/api/v1/image/${id}`);
+}
+
 // post:
 //   operationId: image_create
 

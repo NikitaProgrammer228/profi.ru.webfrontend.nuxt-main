@@ -88,6 +88,23 @@ export async function postOrder(formData: FormData): Promise<string> {
     return res.data;
 }
 
+/**
+ * Update an existing order via multipart/form-data.
+ * @param id The ID of the order to update.
+ * @param formData FormData with fields and files to update.
+ * @returns The updated Order object.
+ */
+export async function updateOrder(id: string, formData: FormData): Promise<Order> {
+    const res = await api.request<Order>({
+        url: `/api/v1/orders/${id}`,
+        method: 'PATCH',
+        data: formData,
+        headers: { 'Content-Type': 'multipart/form-data' },
+        transformRequest: [(data) => data]
+    });
+    return res.data;
+}
+
 // /orders/{id}:
 // get:
 //   operationId: orders_read

@@ -34,10 +34,11 @@
             <div class="info">
                 <img loading="lazy" src="~/assets/icons/location.svg" alt="location" />
                 {{ [
-                    order.address.country,
+                    // server country or fallback to city.country.name
+                    order.address.country || order.address.city?.country.name,
                     order.address.city?.name,
                     order.address.street,
-                    order.address.house_number && `house ${order.address.house_number}`,
+                    order.address.house_number ? `house ${order.address.house_number}` : '',
                     order.address.apartment_number && `apt ${order.address.apartment_number}`,
                     order.address.postal_code && `postal ${order.address.postal_code}`
                 ].filter(Boolean).join(', ') }}
@@ -52,7 +53,7 @@
                 <img loading="lazy" src="~/assets/icons/cross.svg" alt="cross" />
                 Cancel the order
             </div>
-            <div class="actions">
+            <div class="actions" @click="onEdit">
                 <img loading="lazy" src="~/assets/icons/edit.svg" alt="edit" />
                 Edit order
             </div>
@@ -106,6 +107,7 @@ import { type Order } from '~/app/api/orderApi';
 import { type City, type Address } from '~/app/api/locationApi';
 import { ref } from 'vue';
 import BaseModal from '../UI/BaseModal.vue';
+import { useRouter } from 'vue-router';
 
 const props = defineProps({
     type: {
@@ -130,6 +132,16 @@ const priceType = useParsePriceType(props.order.type_price as any);
 
 // Reactive variable to hold clicked image URL
 const selectedImage = ref<string | null>(null);
+
+// Router for navigation
+const router = useRouter();
+
+/**
+ * Navigate to the order edit page.
+ */
+function onEdit() {
+    router.push(`/client/orders/create?order=${props.order.id}`);
+}
 
 function formatAddress(order: any): string {
     const addr = order.address;

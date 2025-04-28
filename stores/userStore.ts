@@ -100,7 +100,7 @@ export const useUserStore = defineStore("user", () => {
                 loading.value = true;
                 const client = await getClient();
                 
-                // Update user with basic data
+                // Update user with basic data, avatar as string URL
                 user.value = {
                     id: client.id || "",
                     city: client.city || "",
@@ -108,14 +108,14 @@ export const useUserStore = defineStore("user", () => {
                     last_name: client.last_name || "",
                     is_social_account: client.is_social_account || false,
                     is_required_field_fill: client.is_required_field_fill || false,
-                    avatar: client.avatar || "",
+                    avatar: client.avatar?.image || "",
                     email: client.email || "",
                     phone_number: client.phone_number || "",
                     created: client.created || "",
                     modified: client.modified || ""
                 };
 
-                // Update profile with full data including city object
+                // Update profile with full data including city object, avatar as URL string
                 profile.value = {
                     id: client.id || "",
                     city: typeof client.city === 'string' ? {
@@ -137,7 +137,7 @@ export const useUserStore = defineStore("user", () => {
                     last_name: client.last_name || "",
                     is_social_account: client.is_social_account || false,
                     is_required_field_fill: client.is_required_field_fill || false,
-                    avatar: client.avatar || "",
+                    avatar: client.avatar?.image || "",
                     email: client.email || "",
                     phone_number: client.phone_number || "",
                     phone_code: client.phone_code || "",

@@ -8,7 +8,8 @@
             style="display: none;"
             @change="onFileChange"
         />
-        <Avatar class="avatar" :link="profile?.avatar?.image || ''" />
+        <Avatar class="avatar"
+            :link="profile.avatar || ''" />
         <div class="info">
             <div v-if="profile?.first_name" class="info__block">
                 <p>{{ profile?.first_name }} {{ profile?.last_name }}</p>
@@ -19,7 +20,7 @@
                     <img loading="lazy" src="~/assets/icons/cross.svg" alt="delete" />
                     Delete photo
                 </div>
-                <div class="avatar__action" @click="fileInput.click()">
+                <div class="avatar__action" @click="triggerFileInput">
                     <img loading="lazy" src="~/assets/icons/edit.svg" alt="edit" /> Edit photo
                 </div>
             </div>
@@ -28,7 +29,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import Avatar from '~/components/shared/Avatar.vue';
 import BaseBlock from '~/components/UI/BaseBlock.vue';
 import EmailConfirmed from '~/components/account/client/EmailConfirmed.vue';
@@ -50,34 +51,42 @@ const props = defineProps({
 const userStore = useUserStore();
 const profile = ref(userStore.profile);
 const loadingUpload = ref(false);
+// Reference to the hidden file input element
 const fileInput = ref<HTMLInputElement | null>(null);
 
+// Safely trigger file selector
+function triggerFileInput() {
+    fileInput.value?.click();
+}
+
 async function onFileChange(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const file = input?.files?.[0];
+    const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
     loadingUpload.value = true;
     try {
-        const formData = new FormData();
-        formData.append('image', file);
-        const uploaded = await uploadImage(formData);
-        const updatedProfile = await patchClient({ avatar: uploaded.id }, profile.value.id);
-        userStore.profile = updatedProfile;
-        profile.value = updatedProfile;
-        // Optionally store avatar URL
-        localStorage.setItem('profiru-avatar', updatedProfile.avatar || '');
-    } catch (error) {
-        console.error('Avatar upload failed', error);
+        // Upload file directly; uploadImage builds FormData internally
+        const { id: imageId, image: imageUrl } = await uploadImage(file);
+        // Patch avatar id
+        await patchClient({ avatar: imageId }, profile.value.id);
+        // Update store with new avatar URL
+        userStore.profile.avatar = imageUrl;
+        profile.value.avatar = imageUrl;
+        localStorage.setItem('profiru-avatar', imageUrl);
+    } catch (err) {
+        console.error('Avatar upload failed', err);
     } finally {
         loadingUpload.value = false;
     }
 }
 
-watch(() => props.user, (newUser) => {
-    if (newUser) {
-        profile.value = newUser;
-    }
-}, { deep: true });
+// Sync local profile when props.user changes
+watch(
+    () => props.user,
+    (newUser) => {
+        if (newUser) profile.value = newUser;
+    },
+    { deep: true }
+);
 </script>
 
 <style lang="scss" scoped>

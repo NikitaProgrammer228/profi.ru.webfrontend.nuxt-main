@@ -83,22 +83,32 @@ async function onCityChange(city: City) {
 }
 
 async function saveProfile() {
-    const profile = {
-        ...user.profile,
+    // Build minimal payload with only changed fields
+    const payload: Record<string, any> = {
         first_name: name.value,
         last_name: surname.value,
-        city: selectedCity.value?.name || '',
-        country: selectedCity.value?.country?.name || '',
-        email: email.value,
-        phone_number: user.profile.phone_number,
-        avatar: user.profile.avatar?.length ? user.profile.avatar : undefined
+        email: email.value
     };
-
+    if (selectedCity.value) {
+        payload.city = selectedCity.value.name;
+        payload.country = selectedCity.value.country.name;
+    }
     try {
-    const res = await patchClient(profile as unknown as Profile, user.profile.id);
+        const res = await patchClient(payload, user.profile.id);
         if (res) {
-    user.profile = res as unknown as typeof user.profile;
-            selectedCity.value = typeof res.city === 'string' ? null : res.city as City;
+            // Update only changed fields in store to avoid type mismatches
+            user.profile.first_name = res.first_name;
+            user.profile.last_name = res.last_name;
+            user.profile.email = res.email;
+            if (res.city && typeof res.city !== 'string') {
+                // Assign updated city object
+                user.profile.city = res.city as City;
+                selectedCity.value = res.city as City;
+            }
+            // sync input values
+            name.value = res.first_name;
+            surname.value = res.last_name;
+            email.value = res.email;
         }
     } catch (error) {
         console.error('Error updating profile:', error);

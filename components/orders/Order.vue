@@ -1,11 +1,5 @@
 <template>
     <BaseBlock class="order" :center="false">
-        <!-- 1. Изображения, прикреплённые к заказу -->
-        <div v-if="order.images && order.images.length" class="order__images">
-            <div class="order__image" v-for="(img, idx) in order.images" :key="idx">
-                <img loading="lazy" :src="getImageUrl(img)" alt="Attached Image" />
-            </div>
-        </div>
         <div class="order__title">
             <div class="title">
                 <h3>{{ order.title }}</h3>
@@ -25,6 +19,12 @@
         <div v-if="!(type === 'completed')" class="order__description">
             <p>{{ order.description }}
             </p>
+        </div>
+        <!-- Thumbnails under description -->
+        <div v-if="order.images && order.images.length" class="order__images order__images--small">
+            <div class="order__image" v-for="(img, idx) in order.images" :key="idx">
+                <img loading="lazy" :src="getImageUrl(img)" alt="Attached Image" @click="openImage(getImageUrl(img))" />
+            </div>
         </div>
         <div class="order__info" :class="type === 'completed' ? 'border' : ''">
             <div class="info">
@@ -90,6 +90,10 @@
             </div>
         </template>
     </BaseBlock>
+    <!-- Modal for full-size image -->
+    <BaseModal v-if="selectedImage" @close="selectedImage = null">
+        <img :src="selectedImage" alt="Full Image" style="max-width:100%; max-height:80vh; object-fit:contain;" />
+    </BaseModal>
 </template>
 
 <script setup lang="ts">
@@ -100,6 +104,8 @@ import BaseBlock from '../UI/BaseBlock.vue';
 import BaseButton from '../UI/BaseButton.vue';
 import { type Order } from '~/app/api/orderApi';
 import { type City, type Address } from '~/app/api/locationApi';
+import { ref } from 'vue';
+import BaseModal from '../UI/BaseModal.vue';
 
 const props = defineProps({
     type: {
@@ -121,6 +127,9 @@ const status = useParseStatus(props.order.status as any);
 const created = useParseTime(props.order.created || '');
 const deadline = useParseDeadline(props.order.deadline || '');
 const priceType = useParsePriceType(props.order.type_price as any);
+
+// Reactive variable to hold clicked image URL
+const selectedImage = ref<string | null>(null);
 
 function formatAddress(order: any): string {
     const addr = order.address;
@@ -145,6 +154,11 @@ function getImageUrl(path: string): string {
     // Ensure leading slash
     const prefix = api.defaults.baseURL || '';
     return `${prefix}${path.startsWith('/') ? '' : '/'}${path}`;
+}
+
+// Function to open modal with full-size image
+function openImage(url: string): void {
+    selectedImage.value = url;
 }
 </script>
 
@@ -339,5 +353,52 @@ function getImageUrl(path: string): string {
 .border {
     border-top: 1.5px solid #F4F4F4;
     padding-top: 16px;
+}
+
+/* Constrain attached images to a static container size */
+.order__images {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+    width: 100%;
+}
+
+.order__image {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+}
+
+.order__image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    cursor: pointer;
+}
+
+/* Smaller previews on mobile */
+@media screen and (max-width: 550px) {
+    .order__images {
+        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+        gap: 8px;
+    }
+    .order__image {
+        aspect-ratio: 1 / 1;
+    }
+}
+
+/* Smaller thumbnails variant */
+.order__images--small {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, 80px);
+    grid-auto-rows: 80px;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+/* Ensure each thumbnail cell is square */
+.order__images--small .order__image {
+    width: 80px;
+    height: 80px;
 }
 </style>

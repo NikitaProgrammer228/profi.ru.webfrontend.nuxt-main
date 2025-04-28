@@ -1,5 +1,13 @@
 <template>
-    <BaseBlock :center="false" class="profile" :loading="userStore.loading || loading">
+    <BaseBlock :center="false" class="profile" :loading="userStore.loading || loadingUpload || loading">
+        <!-- Hidden file input for avatar upload -->
+        <input
+            type="file"
+            accept="image/*"
+            ref="fileInput"
+            style="display: none;"
+            @change="onFileChange"
+        />
         <Avatar class="avatar" :link="profile?.avatar?.image || ''" />
         <div class="info">
             <div v-if="profile?.first_name" class="info__block">
@@ -11,10 +19,8 @@
                     <img loading="lazy" src="~/assets/icons/cross.svg" alt="delete" />
                     Delete photo
                 </div>
-                <div class="avatar__action">
-                    <!-- <input type="file" accept="image/*" @change="uploadPhoto($event.target.files[0])"> -->
-                    <img loading="lazy" src="~/assets/icons/edit.svg" alt="edit" />
-                    Edit photo
+                <div class="avatar__action" @click="fileInput.click()">
+                    <img loading="lazy" src="~/assets/icons/edit.svg" alt="edit" /> Edit photo
                 </div>
             </div>
         </div>
@@ -22,10 +28,11 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
 import Avatar from '~/components/shared/Avatar.vue';
 import BaseBlock from '~/components/UI/BaseBlock.vue';
 import EmailConfirmed from '~/components/account/client/EmailConfirmed.vue';
-import { useMasterStore } from '~/stores/masterStore';
+import { useUserStore } from '~/stores/userStore';
 import { patchClient } from '~/app/api/clientApi';
 import { uploadImage } from '~/app/api/photoApi';
 
@@ -42,12 +49,27 @@ const props = defineProps({
 
 const userStore = useUserStore();
 const profile = ref(userStore.profile);
-const photo = ref(null);
+const loadingUpload = ref(false);
+const fileInput = ref<HTMLInputElement | null>(null);
 
-async function uploadPhoto(img: File) {
-    photo.value = img;
-    if (photo.value) {
-        await uploadImage(photo.value);
+async function onFileChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input?.files?.[0];
+    if (!file) return;
+    loadingUpload.value = true;
+    try {
+        const formData = new FormData();
+        formData.append('image', file);
+        const uploaded = await uploadImage(formData);
+        const updatedProfile = await patchClient({ avatar: uploaded.id }, profile.value.id);
+        userStore.profile = updatedProfile;
+        profile.value = updatedProfile;
+        // Optionally store avatar URL
+        localStorage.setItem('profiru-avatar', updatedProfile.avatar || '');
+    } catch (error) {
+        console.error('Avatar upload failed', error);
+    } finally {
+        loadingUpload.value = false;
     }
 }
 

@@ -121,6 +121,15 @@ interface OrderAddress {
   intercom?: string;
 }
 
+interface ResponseData {
+  currency: number;
+  images: string[]; // preview URLs
+  place: boolean;
+  time: string;
+  date: string;
+}
+
+// Data model for the order form: only store File objects for images
 interface OrderData {
   id: string;
   title: string;
@@ -129,21 +138,13 @@ interface OrderData {
   type_price: string;
   at_home_client: boolean;
   remotely: boolean;
-  images: File[];
+  images: File[]; // always File objects
   address: OrderAddress;
   subcategory: string;
   client: string;
   currency: number;
   for_all: boolean;
   city?: string;
-}
-
-interface ResponseData {
-  currency: number;
-  images: string[];
-  place: boolean;
-  time: string;
-  date: string;
 }
 
 const response = ref<ResponseData>({
@@ -155,6 +156,7 @@ const response = ref<ResponseData>({
 });
 
 const refferenceOrder = ref<Order | null>(null);
+// Initialize form data, images[] is File list
 const order = ref<OrderData>({
   id: '',
   title: '',
@@ -195,13 +197,8 @@ const currency = computed(() => response.value.currency);
 const createOrder = async () => {
   try {
     const formData = new FormData();
-
-    // 1. Только если есть файлы — добавляем images
-    if (order.value.images.length > 0) {
-      for (const file of order.value.images) {
-        formData.append('images', file);
-      }
-    }
+    // Append all File objects (existing and new)
+    order.value.images.forEach((file) => formData.append('images', file));
 
     // 2. Остальные поля
     formData.append('for_all', order.value.for_all.toString());
@@ -241,7 +238,7 @@ const createOrder = async () => {
       orderCreated.value = true;
     }
   } catch (error: any) {
-    error.value = 'Ошибка при создании заказа. Попробуйте ещё раз.';
+    error.value = 'Ошибка при сохранении заказа. Попробуйте ещё раз.';
     console.error(error);
   }
 };
@@ -258,27 +255,23 @@ function selectCategory(category: Category) {
   }
 }
 
+/** Handle file input change to append multiple new images */
 const handleFileChange = (event: Event) => {
   const input = event.target as HTMLInputElement;
-  if (!input.files || input.files.length === 0) return;
-  // Convert FileList to Array
-  const newFiles = Array.from(input.files);
-  // Append new files to existing ones
-  order.value.images = [...order.value.images, ...newFiles];
-
-  // Append previews: keep existing previews (e.g. remote URLs) and add new base64
-  newFiles.forEach((file) => {
+  if (!input.files) return;
+  const files = Array.from(input.files) as File[];
+  // Merge new files with existing
+  order.value.images.push(...files);
+  // Base64 previews
+  files.forEach((file) => {
     if (file.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        if (e.target?.result) {
-          response.value.images.push(e.target.result as string);
-        }
+        if (e.target?.result) response.value.images.push(e.target.result as string);
       };
       reader.readAsDataURL(file);
     }
   });
-  // Reset input to allow selecting same file again
   input.value = '';
 };
 
@@ -310,51 +303,50 @@ watch(() => response.value.currency, (newCurrency) => {
 onMounted(async () => {
   catalog.subcategories.subcategories = [];
   await catalog.getAllCategories();
-
   if (isEdit.value && route.query.order) {
     const id = route.query.order as string;
     const existing = await getOrder(id);
     refferenceOrder.value = existing;
-    // Prefill form fields
-    order.value = {
-      id: existing.id,
-      title: existing.title,
-      description: existing.description,
-      price: Number(existing.price),
-      type_price: existing.type_price,
-      at_home_client: existing.at_home_client,
-      remotely: existing.remotely,
-      images: [],
-      address: {
-        country: existing.address.country || '',
-        city: typeof existing.address.city === 'object' ? existing.address.city.name : existing.address.city || '',
-        street: existing.address.street || '',
-        house_number: existing.address.house_number || '',
-        apartment_number: existing.address.apartment_number || '',
-        postal_code: existing.address.postal_code || ''
-      },
-      subcategory: existing.subcategory.id,
-      client: existing.client.id,
-      currency: existing.currency.id,
-      for_all: existing.for_all,
-      city: existing.city?.name || ''
-    };
-    subcategory.value = existing.subcategory.name;
-    response.value.images = existing.images;
+    // Prefill preview URLs
+    response.value.images = [...existing.images];
     response.value.currency = existing.currency.id;
     response.value.place = existing.at_home_client;
     response.value.date = existing.deadline || '';
-    // Prefill address input: use server-provided region/state if available, else fallback to city-country
+    // Prefetch existing images as File objects
+    const existingFiles: File[] = await Promise.all(
+      existing.images.map(async (path) => {
+        const url = getImageUrl(path);
+        const res = await api.get<Blob>(url, { responseType: 'blob' });
+        const blob = res.data;
+        const name = path.split('/').pop() || 'image';
+        return new File([blob], name, { type: blob.type });
+      })
+    );
+    order.value.images = existingFiles;
+    // Prefill other fields
+    order.value.id = existing.id;
+    order.value.title = existing.title;
+    order.value.description = existing.description;
+    order.value.price = Number(existing.price);
+    order.value.type_price = existing.type_price;
+    order.value.at_home_client = existing.at_home_client;
+    order.value.remotely = existing.remotely;
+    order.value.for_all = existing.for_all;
+    order.value.city = existing.city?.name;
+    order.value.currency = existing.currency.id;
+    order.value.subcategory = existing.subcategory.id;
+    order.value.client = existing.client.id;
+    subcategory.value = existing.subcategory.name;
     selectedAddress.value = {
       id: existing.address.id,
       address_dict: {
         country: existing.address.country || existing.address.city?.country.name || '',
-        city: existing.address.city?.name ?? '',
-        street: existing.address.street ?? '',
-        house_number: existing.address.house_number ?? ''
+        city: existing.address.city?.name || '',
+        street: existing.address.street || '',
+        house_number: existing.address.house_number || ''
       },
-      apartment_number: existing.address.apartment_number ?? '',
-      postal_code: existing.address.postal_code ?? '',
+      apartment_number: existing.address.apartment_number || '',
+      postal_code: existing.address.postal_code || '',
       formatted_address: ''
     } as FindAddressModel;
   }

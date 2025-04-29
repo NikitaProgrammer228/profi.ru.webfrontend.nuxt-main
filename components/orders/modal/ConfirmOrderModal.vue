@@ -5,15 +5,11 @@ import BaseCheckbox from '~/components/UI/BaseCheckbox.vue';
 import PriceInput from '~/components/orders/PriceInput.vue';
 import Avatar from '~/components/shared/Avatar.vue';
 import DateSelect from '~/components/UI/DateSelect.vue';
-import type { PropType } from 'vue';
-import type { Master } from '~/app/api/categoryApi';
 
-defineProps({
-    master: {
-        type: Object as PropType<Master>,
-        required: true
-    }
-});
+interface ConfirmOrderModalProps {
+  master: any;
+}
+const props = defineProps<ConfirmOrderModalProps>();
 
 defineEmits(['cancel', 'select']);
 
@@ -33,12 +29,12 @@ const response = ref({
             <img loading="lazy" src="~/assets/icons/black-cross.svg" alt="close" @click="$emit('cancel')">
         </div>
         <div class="modal__body_info">
-            <Avatar size="80px" :link="master.avatar?.image"></Avatar>
+            <Avatar size="80px" :link="props.master.avatar?.image"></Avatar>
             <div class="info_main">
                 <div class="header">
                     <div class="stars">
                         <img loading="lazy" src="~/assets/icons/star.svg" alt="star" width="13px" height="15px" />
-                        {{ master?.average_rating_value?.toFixed(1) || '5.00' }}
+                        {{ props.master?.average_rating_value?.toFixed(1) || '5.00' }}
                     </div>
                     <div class="passport">
                         <img loading="lazy" src="~/assets/icons/verify.svg" alt="verify" />
@@ -46,9 +42,9 @@ const response = ref({
                     </div>
                 </div>
                 <div class="name">
-                    <p @click="navigateTo(`/client/master/${master?.id}`);">
-                        {{ master?.first_name || 'Master Name' }}
-                        {{ master?.last_name || '' }}</p>
+                    <p @click="navigateTo(`/client/master/${props.master?.id}`);">
+                        {{ props.master?.first_name || 'Master Name' }}
+                        {{ props.master?.last_name || '' }}</p>
                     <span>Samara region • Online 1 day ago</span>
                 </div>
             </div>
@@ -70,7 +66,7 @@ const response = ref({
             <DateSelect v-model="response.deadline" placeholder="Deadline"></DateSelect>
             <BaseCheckbox>The date is not yet known</BaseCheckbox>
         </div>
-        <BaseButton @click="$emit('select', response, master.id)">Confirm</BaseButton>
+        <BaseButton @click="$emit('select', response, props.master.id)">Confirm</BaseButton>
     </BaseModal>
 </template>
 

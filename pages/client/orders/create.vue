@@ -174,7 +174,9 @@ const order = ref<OrderData>({
   city: ''
 });
 
-const isEdit = computed(() => Boolean(route.query.order));
+// Определяем режим редактирования и повторного создания
+const isRepeat = computed(() => Boolean(route.query.repeat));
+const isEdit = computed(() => Boolean(route.query.order) && !isRepeat.value);
 
 const categories = computed(() => {
   if (catalog.subcategories.subcategories.length) {
@@ -230,10 +232,18 @@ const createOrder = async () => {
       formData.append('address', JSON.stringify({}));
     }
 
-    if (isEdit.value && refferenceOrder.value) {
+    if (isRepeat.value && refferenceOrder.value) {
+      // Повтор заказа: сбрасываем archived и возвращаем в поиск исполнителей
+      formData.append('archived', 'false');
+      formData.append('status', 'search_for_performers');
+      await updateOrder(refferenceOrder.value.id, formData);
+      router.push('/client/orders/my');
+    } else if (isEdit.value && refferenceOrder.value) {
+      // Редактирование существующего заказа
       await updateOrder(refferenceOrder.value.id, formData);
       router.push('/client/orders/my');
     } else {
+      // Новое создание заказа
       await postOrder(formData);
       orderCreated.value = true;
     }
@@ -303,7 +313,7 @@ watch(() => response.value.currency, (newCurrency) => {
 onMounted(async () => {
   catalog.subcategories.subcategories = [];
   await catalog.getAllCategories();
-  if (isEdit.value && route.query.order) {
+  if (route.query.order) {
     const id = route.query.order as string;
     const existing = await getOrder(id);
     refferenceOrder.value = existing;

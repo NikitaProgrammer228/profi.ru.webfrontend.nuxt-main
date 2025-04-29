@@ -28,16 +28,7 @@
             </div>
             <div class="info">
                 <img loading="lazy" src="~/assets/icons/location.svg" alt="location" />
-                {{
-                    [
-                        order.address.country || order.address.city?.country.name,
-                        order.address.city?.name,
-                        order.address.street,
-                        order.address.house_number ? `house ${order.address.house_number}` : '',
-                        order.address.apartment_number ? `apt ${order.address.apartment_number}` : '',
-                        order.address.postal_code ? `postal ${order.address.postal_code}` : ''
-                    ].filter(Boolean).join(', ')
-                }}
+                {{ formatAddress(order) }}
             </div>
             <div class="info">
                 <img loading="lazy" src="~/assets/icons/price.svg" alt="price" />
@@ -73,8 +64,10 @@ function formatAddress(order: any): string {
     const addr = order.address;
     if (!addr) return 'No location';
     const parts: string[] = [];
-    // Country and city
-    if (addr.country) parts.push(addr.country);
+    // Country (string field or nested city.country)
+    const countryName = addr.country || (addr.city?.country?.name);
+    if (countryName) parts.push(countryName);
+    // Region or city
     if (addr.city && 'name' in addr.city && addr.city.name) parts.push(addr.city.name);
     // Street and house number
     if (addr.street) parts.push(addr.street);
@@ -93,7 +86,7 @@ async function redirect(order: any) {
 }
 
 async function repeatOrder(id: string) {
-    router.push('/client/orders/create?order=' + id);
+    router.push({ path: '/client/orders/create', query: { order: id, repeat: 'true' } });
 }
 </script>
 

@@ -3,10 +3,10 @@
     <BaseBlock v-if="orderStore.currentOrder?.archived" padding="0" :flat="true" :center="true">
         <h2>The order is completed</h2>
         <Order :order="orderStore.currentOrder" type="completed" />
-        <OrderFeedback :order="orderStore.currentOrder" />
+        <OrderFeedback v-if="orderStore.currentOrder.master" :order="orderStore.currentOrder" />
     </BaseBlock>
     <BaseBlock v-else-if="orderStore.currentOrder?.status === 'search_for_performers'" padding="0" :flat="true" :center="false">
-        <Order v-if="orderStore.currentOrder" :order="orderStore.currentOrder" type="searching" @cancel="cancel"></Order>
+        <Order v-if="orderStore.currentOrder" :order="orderStore.currentOrder" type="searching" @cancel="showCancel = true"></Order>
         <template v-if="orderStore.orderResponses.length">
             <p class="order__feedback">Feedback from the masters <span>{{ orderStore.orderResponses.length }}</span> </p>
             <Master v-for="response in orderStore.orderResponses" :key="response.id" :response="response" :master="response.master" @offer="offerOrder" type="order" @reject="rejectOrder" />
@@ -22,8 +22,14 @@
         <Master v-if="orderStore.currentOrder" :master="orderStore.currentOrder.master" @offer="offerOrder" type="selected" /> -->
     </BaseBlock>
 
-    <ConfirmOrderModal v-if="showOrder" @select="selected = true; showOrder = false" @cancel="showOrder = false" />
-    <CancelOrderModal v-if="showCancel && orderStore.currentOrder" @cancel="showCancel = false" :reasons="reject" :order-id="orderStore.currentOrder.id" />
+    <ConfirmOrderModal v-if="showOrder && orderStore.currentOrder?.master" :master="orderStore.currentOrder!.master as any" @select="selected = true; showOrder = false" @cancel="showOrder = false" />
+    <CancelOrderModal
+      v-if="showCancel && orderStore.currentOrder"
+      @cancel="showCancel = false"
+      :reasons="reject"
+      :order-id="orderStore.currentOrder.id"
+      :master-exists="!!orderStore.currentOrder.master?.first_name"
+    />
 </template>
 
 <script setup lang="ts">
@@ -35,7 +41,7 @@ import ConfirmOrderModal from '~/components/orders/modal/ConfirmOrderModal.vue';
 import Order from '~/components/orders/Order.vue';
 import OrderFeedback from '~/components/orders/OrderFeedback.vue';
 import { useOrderStore } from '~/stores/orderStore';
-import { cancelOrder, getOrder, orderGetReasonCancel, orderGetResponses, orderRejectResponse, type Reason, orderGetRecommendedMasters } from '~/app/api/orderApi';
+import { getOrder, orderGetReasonCancel, orderGetResponses, orderRejectResponse, type Reason, orderGetRecommendedMasters } from '~/app/api/orderApi';
 import { type Master as MasterType } from '~/app/api/categoryApi';
 import { getReviewById } from '~/app/api/reviewApi';
 
@@ -54,10 +60,6 @@ function offerOrder(id: number) {
     showOrder.value = true;
 }
 
-async function cancel(id: string) {
-    await cancelOrder(id);
-}
-
 async function rejectOrder(id: string) {
     await orderRejectResponse(id, orderStore.currentOrder?.id as string); // если саксес то удалить респонс на фронте. либо с бека снова их получать. лучше 2е
 }
@@ -67,7 +69,7 @@ onMounted(async () => {
     orderStore.orderResponses = await orderGetResponses(route.params.id as string);
     recommendedMasters.value = await orderGetRecommendedMasters(orderStore.currentOrder.subcategory.id);
 
-    if (orderStore.currentOrder.archived) {
+    if (orderStore.currentOrder.archived && orderStore.currentOrder.master) {
         orderStore.currentFeedback = await getReviewById(orderStore.currentOrder.id);
     }
 

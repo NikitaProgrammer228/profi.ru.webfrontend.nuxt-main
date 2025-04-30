@@ -71,12 +71,14 @@ import BaseButton from '~/components/UI/BaseButton.vue';
 import BaseInput from '~/components/UI/BaseInput.vue';
 import CodeInputWrapper from '~/components/auth/CodeInputWrapper.vue';
 import BaseCheckbox from '../UI/BaseCheckbox.vue';
-import { register, loginByGoogle, verifyCode, completeRegistration } from '~/app/api/authApi';
+import { register, loginByGoogle, verifyCode, completeRegistration, becomeMaster } from '~/app/api/authApi';
 import PhoneInput from '../UI/PhoneInput.vue';
 import { getClient } from '~/app/api/clientApi';
 import CityInput from '~/components/orders/CityInput.vue';
 import type { City } from '~/stores/userStore';
 import { useRouter } from 'vue-router';
+import { useMasterStore } from '~/stores/masterStore';
+import { useUserStore } from '~/stores/userStore';
 
 const props = defineProps({
     master: {
@@ -207,7 +209,26 @@ const complete = async () => {
             phone_code: digits.value,
             phone_country_code: selectedCountryCode.value
         }, client.id);
+        
+        if (props.master) {
+            await becomeMaster({
+                is_organization: props.org,
+                name_organization: performer.value.orgName,
+                phone_code: digits.value,
+                phone_country_code: selectedCountryCode.value,
+                phone_number: client.phone_number
+            });
+            const masterStore = useMasterStore();
+            try {
+                masterStore.profile = await getMasterMe();
+            } catch {}
+            router.push('/master/account');
+            return;
+        }
 
+        const userStore = useUserStore();
+        userStore.user = await getClient();
+        userStore.isAuth = true;
         router.push('/client/account');
     } catch (error) {
         console.error('Registration error:', error);

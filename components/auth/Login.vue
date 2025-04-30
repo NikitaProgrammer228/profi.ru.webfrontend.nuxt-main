@@ -30,13 +30,18 @@ import BaseButton from '~/components/UI/BaseButton.vue';
 import BaseInput from '~/components/UI/BaseInput.vue';
 import PhoneInput from '../UI/PhoneInput.vue';
 import { loginByGoogle, login } from '~/app/api/authApi';
+import { useRouter } from 'vue-router';
+import { getMasterMe } from '~/app/api/masterApi';
+import { useMasterStore } from '~/stores/masterStore';
 
-defineProps({
+const props = defineProps({
     master: {
         type: Boolean,
         default: false
     }
 });
+const router = useRouter();
+const masterStore = useMasterStore();
 
 const errorMessage = ref('');
 
@@ -53,11 +58,21 @@ function updatePhone(value: { digits: string; phone: string }) {
     phone.value = String(value.phone);
 }
 
+async function handlePostLoginRouting() {
+    try {
+        const profileData = await getMasterMe();
+        masterStore.profile = profileData;
+        router.push('/master/account');
+    } catch {
+        router.push('/client/catalog');
+    }
+}
+
 async function ByGoogle() {
     const res = await loginByGoogle();
 
     if (res) {
-        navigateTo('/client/catalog');
+        await handlePostLoginRouting();
     } else {
         errorMessage.value = 'Error when logging in with Google. Please try again.';
     }
@@ -77,7 +92,7 @@ async function loginByNumber() {
         errorMessage.value = 'Error. Incorrect phone number or password. Please try again.';
         return
     }
-    navigateTo('/client/catalog');
+    await handlePostLoginRouting();
 }
 
 const errors = reactive({

@@ -239,3 +239,14 @@ export async function deleteAccount(): Promise<any> {
 export async function restorePassword(number: string): Promise<any> {
     
 }
+
+export async function becomeMaster(payload: {
+    is_organization: boolean;
+    name_organization?: string;
+    phone_code: string;
+    phone_country_code: string;
+    phone_number: string;
+}): Promise<any> {
+    const res = await api.post(`/api/v1/user/become_master`, payload);
+    return res.data;
+}

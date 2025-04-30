@@ -84,6 +84,7 @@ const userStore = useUserStore();
 const catalog = useCatalogStore();
 const orderStore = useOrderStore();
 const router = useRouter();
+const route = useRoute();
 
 onMounted(async () => {
   setToken();
@@ -98,6 +99,11 @@ onMounted(async () => {
 const navOpened = ref(false);
 const NavRef = ref<HTMLElement | null>(null);
 const type = ref('Client');
+
+// Automatically set sidebar type based on current route path
+watchEffect(() => {
+  type.value = route.path.startsWith('/master') ? 'Master' : 'Client';
+});
 
 const text = ref('');
 

@@ -32,6 +32,7 @@
     <div class="actions">
         <BaseButton type="cancel" @click="deleteModal = true">Remove from publication</BaseButton>
         <BaseButton type="cancel" @click="deleteModal = true">Delete</BaseButton>
+        <BaseButton type="cancel" @click="handleLogout">Log out</BaseButton>
     </div>
 
     <BaseModal v-if="deleteModal">
@@ -53,10 +54,10 @@ import BaseBlock from '~/components/UI/BaseBlock.vue';
 import BaseButton from '~/components/UI/BaseButton.vue';
 import BaseModal from '~/components/UI/BaseModal.vue';
 import { useMasterStore } from '~/stores/masterStore';
+import { logout } from '~/app/api/authApi';
+import { useRouter } from 'vue-router';
 
-definePageMeta({
-    middleware: ['auth'],
-});
+const router = useRouter();
 
 const deleteModal = ref(false);
 
@@ -68,6 +69,11 @@ const aboutFilled = computed(() => {
     }
     return false;
 });
+
+function handleLogout() {
+    logout();
+    router.push('/client/auth');
+}
 
 onMounted(async () => {
     masterStore.profile = await getMasterMe();

@@ -98,16 +98,17 @@
 </template>
 
 <script setup lang="ts">
-import BaseBlock from '~/components/UI/BaseBlock.vue';
-import BaseButton from '~/components/UI/BaseButton.vue';
-import ClientOrder from '~/components/orders/ClientOrder.vue';
 import DoubleButtons from '~/components/shared/DoubleButtons.vue';
+import BaseBlock from '~/components/UI/BaseBlock.vue';
+import ClientOrder from '~/components/orders/ClientOrder.vue';
 import { useOrderStore } from '~/stores/orderStore';
+import { useUserStore } from '~/stores/userStore';
 
 definePageMeta({
     middleware: ['auth'],
 });
 
+const userStore = useUserStore();
 const orderStore = useOrderStore();
 
 const toggle = ref(false);
@@ -128,7 +129,7 @@ const blocks = ref([
 ]);
 
 onMounted(async () => {
-    orderStore.getClientOrders();
+    await orderStore.getClientOrders();
 });
 </script>
 

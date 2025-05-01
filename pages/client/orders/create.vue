@@ -92,6 +92,7 @@ import BaseTextarea from '~/components/UI/BaseTextarea.vue';
 import DateSelect from '~/components/UI/DateSelect.vue';
 import { useRouter } from 'vue-router';
 import { api } from '~/app/api';
+import { useOrderStore } from '~/stores/orderStore';
 
 definePageMeta({
   middleware: ['auth'],
@@ -99,6 +100,7 @@ definePageMeta({
 
 const route = useRoute();
 const router = useRouter();
+const orderStore = useOrderStore();
 const isCategorySelect = ref(false);
 const catalog = useCatalogStore();
 const user = useUserStore();
@@ -247,10 +249,12 @@ const createOrder = async () => {
       formData.append('archived', 'false');
       formData.append('status', 'search_for_performers');
       await updateOrder(refferenceOrder.value.id, formData);
+      await orderStore.getClientOrders();
       router.push('/client/orders/my');
     } else if (isEdit.value && refferenceOrder.value) {
       // Редактирование существующего заказа
       await updateOrder(refferenceOrder.value.id, formData);
+      await orderStore.getClientOrders();
       router.push('/client/orders/my');
     } else {
       // Новое создание заказа

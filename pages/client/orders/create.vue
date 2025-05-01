@@ -78,7 +78,7 @@
 <script setup lang="ts">
 import type { Category } from '~/app/api/categoryApi';
 import { getOrder, postOrder, updateOrder, type Order } from '~/app/api/orderApi';
-import { getUserAddresses, type FindAddressModel } from '~/app/api/locationApi';
+import { getOrCreateCity, type FindAddressModel } from '~/app/api/locationApi';
 import { uploadImage } from '~/app/api/photoApi';
 import AddressInput from '~/components/orders/AddressInput.vue';
 import PriceInput from '~/components/orders/PriceInput.vue';
@@ -170,7 +170,7 @@ const order = ref<OrderData>({
   subcategory: '',
   client: '',
   currency: 1,
-  for_all: false,
+  for_all: true,
   city: ''
 });
 
@@ -217,20 +217,30 @@ const createOrder = async () => {
       formData.append('deadline', response.value.date);
     }
 
-    // 4. Адрес: всегда отправляем данные адреса, чтобы сервер не сбрасывал поля
+    // 4. Address: resolve city to unique ID (or fallback to name) to avoid duplicate matches
+    let addressPayload: Record<string, any> = {};
     if (response.value.place && selectedAddress.value) {
-      formData.append('address', JSON.stringify({
-        country: selectedAddress.value.address_dict.country,
-        city: selectedAddress.value.address_dict.city,
-        street: selectedAddress.value.address_dict.street,
-        house_number: selectedAddress.value.address_dict.house_number,
-        apartment_number: selectedAddress.value.apartment_number,
-        postal_code: selectedAddress.value.postal_code,
-      }));
-    } else {
-      // отправляем пустой объект, если адрес не указан
-      formData.append('address', JSON.stringify({}));
+      const addr = selectedAddress.value as FindAddressModel;
+      const dict = addr.address_dict;
+      let cityValue: number | string = dict.city;
+      try {
+        const cityObj = await getOrCreateCity(dict.city, dict.country);
+        if (cityObj && cityObj.id) {
+          cityValue = cityObj.id;
+        }
+      } catch {
+        // fallback to string name
+      }
+      addressPayload = {
+        country: dict.country,
+        city: cityValue,
+        street: dict.street,
+        house_number: dict.house_number,
+        apartment_number: addr.apartment_number,
+        postal_code: addr.postal_code,
+      };
     }
+    formData.append('address', JSON.stringify(addressPayload));
 
     if (isRepeat.value && refferenceOrder.value) {
       // Повтор заказа: сбрасываем archived и возвращаем в поиск исполнителей

@@ -28,7 +28,7 @@
             </div>
             <div class="info">
                 <img loading="lazy" src="~/assets/icons/location.svg" alt="location" />
-                {{ `${order.city?.name}, ${order.city?.country?.name}` || order.address || 'No location' }}
+                {{ formatAddress(order) }}
             </div>
             <div class="info">
                 <img loading="lazy" src="~/assets/icons/price.svg" alt="price" />
@@ -45,15 +45,12 @@
 import type { PropType } from 'vue';
 import BaseBlock from '../UI/BaseBlock.vue';
 import BaseButton from '../UI/BaseButton.vue';
-import { type Order, orderGetResponses, orderGetRecommendedMasters, getOrder } from '~/app/api/orderApi';
+import { orderGetResponses, orderGetRecommendedMasters, getOrder } from '~/app/api/orderApi';
+import { type City, type Address } from '~/app/api/locationApi';
 import { useOrderStore } from '~/stores/orderStore';
 
-const props = defineProps({
-    order: {
-        type: Object as PropType<Order>,
-        required: true
-    }
-});
+const props = defineProps<{ order: any }>();
+const recommendedMasters = ref<any[]>([]);
 
 const router = useRouter();
 const orderStore = useOrderStore();
@@ -63,17 +60,33 @@ const created = useParseTime(props.order.created);
 const deadline = useParseDeadline(props.order.deadline);
 const priceType = useParsePriceType(props.order.type_price);
 
-async function redirect(order: Order) {
+function formatAddress(order: any): string {
+    const addr = order.address;
+    if (!addr) return 'No location';
+    const parts: string[] = [];
+    // Country (string field or nested city.country)
+    const countryName = addr.country || (addr.city?.country?.name);
+    if (countryName) parts.push(countryName);
+    // Region or city
+    if (addr.city && 'name' in addr.city && addr.city.name) parts.push(addr.city.name);
+    // Street and house number
+    if (addr.street) parts.push(addr.street);
+    if (addr.house_number) parts.push(`house ${addr.house_number}`);
+    // Apartment number and postal code
+    if (addr.apartment_number) parts.push(`apt ${addr.apartment_number}`);
+    if (addr.postal_code) parts.push(`postal ${addr.postal_code}`);
+    return parts.join(', ') || 'No location';
+}
+
+async function redirect(order: any) {
     orderStore.currentOrder = order;
     orderStore.orderResponses = await orderGetResponses(order.id);
-    orderStore.recommendedMasters = await orderGetRecommendedMasters(order.subcategory.id);
-
+    recommendedMasters.value = await orderGetRecommendedMasters(order.subcategory.id);
     router.push(`/client/orders/${order.id}`);
 }
 
 async function repeatOrder(id: string) {
-    orderStore.repeatOrder = await getOrder(id);
-    router.push('/client/orders/create?order=' + id);
+    router.push({ path: '/client/orders/create', query: { order: id, repeat: 'true' } });
 }
 </script>
 

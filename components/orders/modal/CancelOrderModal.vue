@@ -4,22 +4,28 @@
             <p>Cancel the order</p>
             <img loading="lazy" src="~/assets/icons/black-cross.svg" alt="close" @click="$emit('cancel')">
         </div>
-        <div class="modal__body_input reason">
-            <p>Is the reason for your order deletion related to the master?</p>
-            <DoubleButtons :wide="false" :toggle="toggle" @update:toggle="toggle = $event">
-                <template #left>
-                    Yes
-                </template>
-                <template #right>
-                    No
-                </template>
-            </DoubleButtons>
-        </div>
-        <div class="modal__body_input reason">
-            <p>For what reason do you want to close the order?</p>
-            <BaseSelect :list="list" v-model:selected="reason"></BaseSelect>
-        </div>
-        <BaseButton @click="cancel">Cancel</BaseButton>
+        <!-- если нет привязанного мастера, показываем простое подтверждение -->
+        <template v-if="!masterExists">
+            <div class="modal__body_input reason">
+                <p>Are you sure you want to cancel this order? It will be moved to the archive.</p>
+            </div>
+            <BaseButton @click="cancelSimple" type="base">Cancel the Order</BaseButton>
+        </template>
+        <!-- иначе оставляем выбор причины -->
+        <template v-else>
+            <div class="modal__body_input reason">
+                <p>Is the reason for your order deletion related to the master?</p>
+                <DoubleButtons :wide="false" :toggle="toggle" @update:toggle="toggle = $event">
+                    <template #left>Yes</template>
+                    <template #right>No</template>
+                </DoubleButtons>
+            </div>
+            <div class="modal__body_input reason">
+                <p>For what reason do you want to close the order?</p>
+                <BaseSelect :list="list" v-model:selected="reason"></BaseSelect>
+            </div>
+            <BaseButton @click="cancel">Cancel</BaseButton>
+        </template>
     </BaseModal>
 </template>
 
@@ -38,6 +44,10 @@ const props = defineProps({
     orderId: {
         type: String,
         required: true
+    },
+    masterExists: {
+        type: Boolean,
+        default: true
     }
 });
 const emit = defineEmits(['cancel']);
@@ -63,6 +73,12 @@ async function cancel() {
     await cancelOrder(props.orderId, {
         reason: reason.value
     });    
+    emit('cancel');
+    navigateTo('/client/orders/my');
+}
+
+async function cancelSimple() {
+    await cancelOrder(props.orderId, {});
     emit('cancel');
     navigateTo('/client/orders/my');
 }

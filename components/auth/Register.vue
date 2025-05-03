@@ -53,7 +53,7 @@
         </div>
         <div class="block">
             <p>City</p>
-            <BaseInput type="text" v-model="user.city" placeholder="City" />
+            <CityInput v-model:city="user.city" placeholder="City" />
         </div>
         <div class="block" v-if="!isGoogle">
             <p>E-mail address</p>
@@ -71,11 +71,16 @@ import BaseButton from '~/components/UI/BaseButton.vue';
 import BaseInput from '~/components/UI/BaseInput.vue';
 import CodeInputWrapper from '~/components/auth/CodeInputWrapper.vue';
 import BaseCheckbox from '../UI/BaseCheckbox.vue';
-import { register, loginByGoogle, verifyCode, completeRegistration } from '~/app/api/authApi';
+import { register, loginByGoogle, verifyCode, completeRegistration, becomeMaster } from '~/app/api/authApi';
 import PhoneInput from '../UI/PhoneInput.vue';
 import { getClient } from '~/app/api/clientApi';
+import CityInput from '~/components/orders/CityInput.vue';
+import type { City } from '~/stores/userStore';
+import { useRouter } from 'vue-router';
+import { useMasterStore } from '~/stores/masterStore';
+import { useUserStore } from '~/stores/userStore';
 
-defineProps({
+const props = defineProps({
     master: {
         type: Boolean,
         default: false
@@ -87,6 +92,7 @@ defineProps({
 });
 
 const userStore = useUserStore();
+const router = useRouter();
 
 const isCodeInput = ref(false);
 const completedReg = ref(false);
@@ -98,6 +104,7 @@ const agree = ref(false);
 const codeError = ref(false);
 const errorMessage = ref('');
 const isGoogle = ref(false);
+const selectedCountryCode = ref('RU');
 
 let verificationId = '';
 
@@ -108,36 +115,28 @@ const performer = ref({
 interface UserData {
     last_name: string;
     first_name: string;
-    city: string;
+    city: City | null;
     email: string;
 }
 
 const user = ref<UserData>({
     last_name: '',
     first_name: '',
-    city: '',
-    email: '',
+    city: null,
+    email: ''
 });
 
 const valid = computed(() => {
     return (phone.value.length >= 8) && (password.value.length >= 8) && (password.value === repeatPassword.value) && agree.value
 });
 const validReg = computed(() => {
-    if (!user.value) return false;
-    
-    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    const { last_name, first_name, city, email } = user.value;
-
-    if (!isGoogle.value) {
-        return last_name.length > 0 && 
-               first_name.length > 0 && 
-               city.length > 0 &&
-               emailPattern.test(email);
-    }
-    
-    return last_name.length > 0 && 
-           first_name.length > 0 && 
-           city.length > 0;
+    return user.value.last_name &&
+        user.value.first_name &&
+        user.value.city &&
+        typeof user.value.city === 'object' &&
+        user.value.city.name &&
+        user.value.city.country?.name &&
+        user.value.email;
 });
 
 async function sendCode() {
@@ -185,22 +184,57 @@ async function ByGoogle() {
     }
 }
 
-function updatePhone(value: { digits: string; phone: number }) {
+function updatePhone(value: { digits: string; phone: number; countryCode?: string }) {
     digits.value = value.digits;
     phone.value = String(value.phone);
-}
-
-async function complete() {
-    try {
-        const client = await getClient();
-        await completeRegistration(user.value, client.id);
-        await userStore.checkAuth();
-        navigateTo('/client/catalog');
-    } catch (error) {
-        console.error('Error completing registration:', error);
-        errorMessage.value = 'Error completing registration. Please try again.';
+    if (value.countryCode) {
+        selectedCountryCode.value = value.countryCode;
     }
 }
+
+const complete = async () => {
+    if (!user.value.city || typeof user.value.city === 'string') {
+        return;
+    }
+
+    try {
+        const client = await getClient();
+        await completeRegistration({
+            last_name: user.value.last_name,
+            first_name: user.value.first_name,
+            city: user.value.city.name,
+            country: user.value.city.country.name,
+            email: user.value.email,
+            phone_number: client.phone_number,
+            phone_code: digits.value,
+            phone_country_code: selectedCountryCode.value
+        }, client.id);
+        
+        if (props.master) {
+            await becomeMaster({
+                is_organization: props.org,
+                name_organization: performer.value.orgName,
+                phone_code: digits.value,
+                phone_country_code: selectedCountryCode.value,
+                phone_number: client.phone_number
+            });
+            const masterStore = useMasterStore();
+            try {
+                masterStore.profile = await getMasterMe();
+            } catch {}
+            router.push('/master/account');
+            return;
+        }
+
+        const userStore = useUserStore();
+        userStore.user = await getClient();
+        userStore.isAuth = true;
+        router.push('/client/account');
+    } catch (error) {
+        console.error('Registration error:', error);
+        errorMessage.value = 'Registration failed. Please try again.';
+    }
+};
 
 const errors = reactive({
     phone: {
@@ -269,7 +303,7 @@ const clearError = (type: 'phone' | 'password' | 'repeatPassword' | 'email') => 
 };
 
 watch(userStore, () => {
-    if (userStore.user?.city) {
+    if (userStore.user?.city && typeof userStore.user.city === 'object') {
         user.value.city = userStore.user.city;
     }
 }, { deep: true });

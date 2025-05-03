@@ -6,6 +6,11 @@ interface Image {
     image: string;
 }
 
+interface UploadedImage {
+    id: string;
+    image: string;
+}
+
 // /image:
 // get:
 //   operationId: image_list
@@ -30,10 +35,34 @@ export async function postImage(data: FormData): Promise<Image> {
     return res.data;
 }
 
-export async function uploadImage(data: FormData): Promise<Image[]> {
-    const res = await api.post("/api/v1/image/upload", data, { headers: { "Content-Type": "multipart/form-data" } });
+/**
+ * Upload a File object as multipart/form-data to the image upload endpoint.
+ * @param file The image File to upload under the 'image' key.
+ * @returns The uploaded image metadata, containing `id` and `image` URL.
+ */
+export async function uploadImage(file: File): Promise<UploadedImage> {
+    const formData = new FormData();
+    formData.append('image', file);
+    // use api.request to send multipart/form-data without JSON serialization
+    const response = await api.request<UploadedImage>({
+        url: '/api/v1/image/upload',
+        method: 'POST',
+        data: formData,
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        },
+        // Prevent axios from serializing FormData to JSON
+        transformRequest: [(data) => data]
+    });
+    return response.data;
+}
 
-    return res.data;
+/**
+ * Delete an uploaded image by its ID.
+ * @param id The image resource UUID to delete.
+ */
+export async function deleteImage(id: string): Promise<void> {
+    await api.delete(`/api/v1/image/${id}`);
 }
 
 // post:

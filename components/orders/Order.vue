@@ -20,6 +20,12 @@
             <p>{{ order.description }}
             </p>
         </div>
+        <!-- Thumbnails under description -->
+        <div v-if="order.images && order.images.length" class="order__images order__images--small">
+            <div class="order__image" v-for="(img, idx) in order.images" :key="idx">
+                <img loading="lazy" :src="getImageUrl(img)" alt="Attached Image" @click="openImage(getImageUrl(img))" />
+            </div>
+        </div>
         <div class="order__info" :class="type === 'completed' ? 'border' : ''">
             <div class="info">
                 <img loading="lazy" src="~/assets/icons/timer.svg" alt="time" />
@@ -27,7 +33,15 @@
             </div>
             <div class="info">
                 <img loading="lazy" src="~/assets/icons/location.svg" alt="location" />
-                {{ `${order.city?.name}, ${order.city?.country?.name}` || order.address || 'No location' }}
+                {{ [
+                    // server country or fallback to city.country.name
+                    order.address.country || order.address.city?.country.name,
+                    order.address.city?.name,
+                    order.address.street,
+                    order.address.house_number ? `house ${order.address.house_number}` : '',
+                    order.address.apartment_number && `apt ${order.address.apartment_number}`,
+                    order.address.postal_code && `postal ${order.address.postal_code}`
+                ].filter(Boolean).join(', ') }}
             </div>
             <div class="info">
                 <img loading="lazy" src="~/assets/icons/price.svg" alt="price" />
@@ -39,7 +53,7 @@
                 <img loading="lazy" src="~/assets/icons/cross.svg" alt="cross" />
                 Cancel the order
             </div>
-            <div class="actions">
+            <div class="actions" @click="onEdit">
                 <img loading="lazy" src="~/assets/icons/edit.svg" alt="edit" />
                 Edit order
             </div>
@@ -77,14 +91,23 @@
             </div>
         </template>
     </BaseBlock>
+    <!-- Modal for full-size image -->
+    <BaseModal v-if="selectedImage" @close="selectedImage = null">
+        <img :src="selectedImage" alt="Full Image" style="max-width:100%; max-height:80vh; object-fit:contain;" />
+    </BaseModal>
 </template>
 
 <script setup lang="ts">
+import { api } from '~/app/api';
 import type { PropType } from 'vue';
 import Avatar from '../shared/Avatar.vue';
 import BaseBlock from '../UI/BaseBlock.vue';
 import BaseButton from '../UI/BaseButton.vue';
 import { type Order } from '~/app/api/orderApi';
+import { type City, type Address } from '~/app/api/locationApi';
+import { ref } from 'vue';
+import BaseModal from '../UI/BaseModal.vue';
+import { useRouter } from 'vue-router';
 
 const props = defineProps({
     type: {
@@ -102,10 +125,53 @@ const props = defineProps({
 
 defineEmits(['chat', 'cancel']);
 
-const status = useParseStatus(props.order.status);
-const created = useParseTime(props.order.created);
-const deadline = useParseDeadline(props.order.deadline);
-const priceType = useParsePriceType(props.order.type_price);
+const status = useParseStatus(props.order.status as any);
+const created = useParseTime(props.order.created || '');
+const deadline = useParseDeadline(props.order.deadline || '');
+const priceType = useParsePriceType(props.order.type_price as any);
+
+// Reactive variable to hold clicked image URL
+const selectedImage = ref<string | null>(null);
+
+// Router for navigation
+const router = useRouter();
+
+/**
+ * Navigate to the order edit page.
+ */
+function onEdit() {
+    router.push(`/client/orders/create?order=${props.order.id}`);
+}
+
+function formatAddress(order: any): string {
+    const addr = order.address;
+    if (!addr) return 'No location';
+    const parts: string[] = [];
+    // Country
+    if (addr.country) parts.push(addr.country);
+    // City
+    if (addr.city && 'name' in addr.city && addr.city.name) parts.push(addr.city.name);
+    // Street and house number
+    if (addr.street) parts.push(addr.street);
+    if (addr.house_number) parts.push(`house ${addr.house_number}`);
+    // Apartment number and postal code
+    if (addr.apartment_number) parts.push(`apt ${addr.apartment_number}`);
+    if (addr.postal_code) parts.push(`postal ${addr.postal_code}`);
+    return parts.join(', ') || 'No location';
+}
+
+// Helper to build full image URLs
+function getImageUrl(path: string): string {
+    if (path.startsWith('http')) return path;
+    // Ensure leading slash
+    const prefix = api.defaults.baseURL || '';
+    return `${prefix}${path.startsWith('/') ? '' : '/'}${path}`;
+}
+
+// Function to open modal with full-size image
+function openImage(url: string): void {
+    selectedImage.value = url;
+}
 </script>
 
 <style lang="scss" scoped>
@@ -299,5 +365,52 @@ const priceType = useParsePriceType(props.order.type_price);
 .border {
     border-top: 1.5px solid #F4F4F4;
     padding-top: 16px;
+}
+
+/* Constrain attached images to a static container size */
+.order__images {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+    width: 100%;
+}
+
+.order__image {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+}
+
+.order__image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    cursor: pointer;
+}
+
+/* Smaller previews on mobile */
+@media screen and (max-width: 550px) {
+    .order__images {
+        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+        gap: 8px;
+    }
+    .order__image {
+        aspect-ratio: 1 / 1;
+    }
+}
+
+/* Smaller thumbnails variant */
+.order__images--small {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, 80px);
+    grid-auto-rows: 80px;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+/* Ensure each thumbnail cell is square */
+.order__images--small .order__image {
+    width: 80px;
+    height: 80px;
 }
 </style>

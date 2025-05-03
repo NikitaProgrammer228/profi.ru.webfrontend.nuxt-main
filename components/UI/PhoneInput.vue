@@ -7,7 +7,7 @@
                     <div style="display: flex; align-items: center;" v-html="flag"></div>
                     <span>{{ digits }}</span>
                 </div>
-                <input type="number" :placeholder v-model="phone" @blur="$emit('blur')" @focus="$emit('focus')">
+                <input type="number" :placeholder="placeholder" v-model="phone" @blur="$emit('blur')" @focus="$emit('focus')">
             </div>
             <!-- <img loading="lazy" src="~/assets/icons/help.svg" alt="help" /> -->
         </div>
@@ -16,7 +16,7 @@
             <BaseInput type="search" v-model="search" placeholder="Search" style="margin-bottom: -10px;" />
             <div class="dropdown__items" v-memo="[search]">
                 <div class="dropdown__item" v-for="(item, i) in countries" :key="i"
-                    @click="selectCountry(item.dialCode, Flags[item.code])">
+                    @click="selectCountry(item.dialCode, Flags[item.code], item.code)">
                     <div class="flag" v-html="Flags[item.code]"></div>
                     <span>{{ item.name }} ({{ item.code }})</span>
                 </div>
@@ -36,8 +36,23 @@ const props = defineProps({
     placeholder: String,
     type: String,
     hint: String,
-    value: Number,
-    error: String
+    value: {
+        type: [Number, String],
+        default: ''
+    },
+    error: String,
+    countryCode: {
+        type: String,
+        default: 'RU'
+    },
+    phoneCode: {
+        type: String,
+        default: '+7'
+    },
+    readonly: {
+        type: Boolean,
+        default: false
+    }
 });
 const emit = defineEmits(['update', 'blur', 'focus']);
 
@@ -48,8 +63,8 @@ const selectRef = ref(null);
 const flag = ref(Flags['RU']);
 const search = ref('');
 
-const digits = ref('+7');
-const phone = ref(props.value || '');
+const digits = ref(props.phoneCode);
+const phone = ref(props.value?.toString() || '');
 
 const countries = computed(() => {
     return search.value.length ? searchCountries(search.value) : countriesAll.value;
@@ -59,7 +74,7 @@ function searchCountries(search: string) {
     return countriesAll.value.filter(item => item.name.toLowerCase().includes(search.toLowerCase()));
 }
 
-function selectCountry(code: string, flagSVG: string) {
+function selectCountry(code: string, flagSVG: string, countryCode: string) {
     flag.value = flagSVG;
     search.value = '';
     digits.value = code;
@@ -67,9 +82,28 @@ function selectCountry(code: string, flagSVG: string) {
 
     emit('update', {
         digits: digits.value,
-        phone: phone.value
+        phone: phone.value,
+        countryCode: countryCode
     });
 }
+
+watch(() => props.phoneCode, (newCode) => {
+    if (newCode) {
+        digits.value = newCode;
+    }
+});
+
+watch(() => props.countryCode, (newCode) => {
+    if (newCode && Flags[newCode]) {
+        flag.value = Flags[newCode];
+    }
+});
+
+watch(() => props.value, (newValue) => {
+    if (newValue !== undefined) {
+        phone.value = newValue.toString();
+    }
+});
 
 watch(phone, () => {
     emit('update', {
@@ -82,7 +116,14 @@ useClickOutside(selectRef, () => opened.value = false);
 
 onMounted(() => {
     countriesAll.value = CountryList.getAll();
-})
+    const country = countriesAll.value.find(c => c.code === props.countryCode);
+    if (country) {
+        flag.value = Flags[country.code];
+        if (!props.phoneCode) {
+            digits.value = country.dialCode;
+        }
+    }
+});
 </script>
 
 <style lang="scss" scoped>

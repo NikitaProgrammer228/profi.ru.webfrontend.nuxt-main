@@ -90,14 +90,15 @@ const changeMonth = (direction: number) => {
 };
 
 const confirmDate = () => {
+    if (selectedDate.value != null) {
+        emit('update:modelValue', `${currentYear.value}-${currentMonth.value + 1}-${selectedDate.value}`);
+    }
     show.value = false;
-    emit('update:modelValue', `${currentYear.value}-${currentMonth.value + 1}-${selectedDate.value}`);
 };
 
 useClickOutside(dateRef, () => {
-    emit('update:modelValue', `${currentYear.value}-${currentMonth.value + 1}-${selectedDate.value}`);
     show.value = false;
-    });
+});
 </script>
 
 <style scoped lang="scss">

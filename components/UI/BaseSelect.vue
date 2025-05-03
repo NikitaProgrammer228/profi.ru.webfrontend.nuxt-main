@@ -25,7 +25,7 @@ interface Option {
 defineProps<{
     hint?: string;
     list: Option[];
-    selected?: string;
+    selected?: string | number | boolean;
     placeholder?: string;
 }>();
 

@@ -2,13 +2,13 @@ import { setToken } from "~/app/api";
 import { getClient } from "~/app/api/clientApi";
 import { navigateTo } from "#app";
 
-interface City {
-    id: string;
+export interface City {
+    id: number;
     name: string;
     country: {
-        id: string;
+        id: number;
         name: string;
-    }
+    };
 }
 
 interface Profile {
@@ -21,6 +21,8 @@ interface Profile {
     avatar: string;
     email: string;
     phone_number: string;
+    phone_code: string;
+    phone_country_code: string;
     created: string;
     modified: string;
 }
@@ -62,10 +64,10 @@ export const useUserStore = defineStore("user", () => {
     const profile = ref<Profile>({
         id: "",
         city: {
-            id: "",
+            id: 1,
             name: "",
             country: {
-                id: "",
+                id: 1,
                 name: ""
             }
         },
@@ -76,6 +78,8 @@ export const useUserStore = defineStore("user", () => {
         avatar: "",
         email: "",
         phone_number: "",
+        phone_code: "",
+        phone_country_code: "",
         created: "",
         modified: "",
     });
@@ -96,7 +100,7 @@ export const useUserStore = defineStore("user", () => {
                 loading.value = true;
                 const client = await getClient();
                 
-                // Update user with basic data
+                // Update user with basic data, avatar as string URL
                 user.value = {
                     id: client.id || "",
                     city: client.city || "",
@@ -104,28 +108,28 @@ export const useUserStore = defineStore("user", () => {
                     last_name: client.last_name || "",
                     is_social_account: client.is_social_account || false,
                     is_required_field_fill: client.is_required_field_fill || false,
-                    avatar: client.avatar || "",
+                    avatar: client.avatar?.image || "",
                     email: client.email || "",
                     phone_number: client.phone_number || "",
                     created: client.created || "",
                     modified: client.modified || ""
                 };
 
-                // Update profile with full data including city object
+                // Update profile with full data including city object, avatar as URL string
                 profile.value = {
                     id: client.id || "",
                     city: typeof client.city === 'string' ? {
-                        id: "",
+                        id: 1,
                         name: client.city,
                         country: {
-                            id: "",
+                            id: 1,
                             name: ""
                         }
                     } : (client.city as City) || {
-                        id: "",
+                        id: 1,
                         name: "",
                         country: {
-                            id: "",
+                            id: 1,
                             name: ""
                         }
                     },
@@ -133,9 +137,11 @@ export const useUserStore = defineStore("user", () => {
                     last_name: client.last_name || "",
                     is_social_account: client.is_social_account || false,
                     is_required_field_fill: client.is_required_field_fill || false,
-                    avatar: client.avatar || "",
+                    avatar: client.avatar?.image || "",
                     email: client.email || "",
                     phone_number: client.phone_number || "",
+                    phone_code: client.phone_code || "",
+                    phone_country_code: client.phone_country_code || "",
                     created: client.created || "",
                     modified: client.modified || ""
                 };
@@ -191,10 +197,10 @@ export const useUserStore = defineStore("user", () => {
         profile.value = {
             id: "",
             city: {
-                id: "",
+                id: 1,
                 name: "",
                 country: {
-                    id: "",
+                    id: 1,
                     name: ""
                 }
             },
@@ -205,6 +211,8 @@ export const useUserStore = defineStore("user", () => {
             avatar: "",
             email: "",
             phone_number: "",
+            phone_code: "",
+            phone_country_code: "",
             created: "",
             modified: "",
         };

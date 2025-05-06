@@ -145,8 +145,8 @@ function onFileChange(event: Event) {
                 const result = e.target?.result;
                 if (typeof result === 'string') {
                     newImages.push(result);
-                    if (newImages.length === files.length) {
-                        response.images = [...response.images, ...newImages];
+                if (newImages.length === files.length) {
+                    response.images = [...response.images, ...newImages];
                     }
                 }
             };

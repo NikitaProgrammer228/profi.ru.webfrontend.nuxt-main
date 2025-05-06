@@ -47,8 +47,7 @@
 
 <script setup lang="ts">
 import { getMasterMe, getMasterSpecializations } from '~/app/api/masterApi';
-import { getImages } from '~/app/api/photoApi';
-import AccountInfo from '~/components/account/client/AccountInfo.vue';
+import AccountInfo from '~/components/account/master/AccountInfo.vue';
 import Passport from '~/components/account/master/Passport.vue';
 import BaseBlock from '~/components/UI/BaseBlock.vue';
 import BaseButton from '~/components/UI/BaseButton.vue';
@@ -56,6 +55,7 @@ import BaseModal from '~/components/UI/BaseModal.vue';
 import { useMasterStore } from '~/stores/masterStore';
 import { logout } from '~/app/api/authApi';
 import { useRouter } from 'vue-router';
+import { setToken } from '~/app/api';
 
 const router = useRouter();
 
@@ -76,8 +76,16 @@ function handleLogout() {
 }
 
 onMounted(async () => {
-    masterStore.profile = await getMasterMe();
-    await getMasterSpecializations(masterStore.profile.id);
+    try {
+        // Ensure axios has auth header
+        setToken();
+        const profile = await getMasterMe();
+        masterStore.profile = profile;
+        await getMasterSpecializations(profile.id);
+    } catch (err: any) {
+        console.error('Error loading master profile:', err);
+        // profile remains as-is; handle unauthorized or missing profile
+    }
 });
 </script>
 

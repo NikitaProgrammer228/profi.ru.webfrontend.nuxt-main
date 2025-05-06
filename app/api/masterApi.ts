@@ -38,9 +38,18 @@ export async function getMasterMe(): Promise<any> {
     return res.data;
 }
 
-export async function patchMaster(id: string, data: any): Promise<ProfileMaster> {
-    const res = await api.patch(`/api/v1/master/${id}`, data);
-
+/**
+ * Partially update master profile with JSON payload.
+ * Use uploadImage to upload files, then pass their IDs in data.
+ */
+export async function patchMaster(id: string, data: Record<string, any>): Promise<ProfileMaster> {
+    const res = await api.patch(
+        `/api/v1/master/${id}`,
+        data,
+        {
+            headers: { 'Content-Type': 'application/json' }
+        }
+    );
     return res.data;
 }
 

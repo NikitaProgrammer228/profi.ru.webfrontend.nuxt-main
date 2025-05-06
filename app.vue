@@ -10,7 +10,7 @@
         <NuxtLink to="/client/orders/create">Create an order</NuxtLink>
         <NuxtLink to="/client/catalog">Find a specialist</NuxtLink>
         <NuxtLink to="/client/orders/my">My orders</NuxtLink>
-        <NuxtLink to="/master/auth">Become a specialist</NuxtLink>
+        <NuxtLink @click.prevent="navigateToBecomeMaster" to="">Become a specialist</NuxtLink>
         <Avatar :small="true" @click="redirect" />
       </nav>
       <nav class="header__nav_mobile">
@@ -21,7 +21,7 @@
             <NuxtLink to="/client/orders/create">Create an order</NuxtLink>
             <NuxtLink to="/client/catalog">Find a specialist</NuxtLink>
             <NuxtLink to="/client/orders/my">My orders</NuxtLink>
-            <NuxtLink to="/master/auth">Become a specialist</NuxtLink>
+            <NuxtLink @click.prevent="navigateToBecomeMaster" to="">Become a specialist</NuxtLink>
           </div>
         </div>
         <Avatar class="avatar_header" :small="true" @click="redirect" />
@@ -74,6 +74,7 @@ import BaseInput from './components/UI/BaseInput.vue';
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { setToken } from './app/api';
+import { useUserStore } from '~/stores/userStore';
 
 const runtimeConfig = useRuntimeConfig();
 const app = initializeApp(runtimeConfig.public.firebaseConfig);
@@ -126,6 +127,14 @@ function redirect() {
     }
   } else {
     router.push('/client/auth');
+  }
+}
+
+function navigateToBecomeMaster() {
+  if (userStore.isAuth) {
+    router.push('/client/become-master');
+  } else {
+    router.push('/master/auth');
   }
 }
 
